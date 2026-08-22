@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>PriceGuard — Live Tracker</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg: #0B0E11;
+    --surface: #12161B;
+    --surface-2: #1A1F26;
+    --border: #232A33;
+    --text: #E8EAED;
+    --text-dim: #7C8894;
+    --cyan: #4FD1C5;
+    --amber: #F0A868;
+    --red: #E5595E;
+    --mono: 'IBM Plex Mono', 'Courier New', monospace;
+    --sans: 'Inter', -apple-system, sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    padding: 40px 24px 80px;
+    background-image:
+      radial-gradient(circle at 15% 0%, rgba(79,209,197,0.06), transparent 40%),
+      radial-gradient(circle at 85% 20%, rgba(240,168,104,0.05), transparent 40%);
+  }
+
+  .wrap { max-width: 1100px; margin: 0 auto; }
+
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 36px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 20px;
+  }
+
+  .brand { display: flex; align-items: baseline; gap: 12px; }
+
+  .brand .dot {
+    width: 10px; height: 10px; border-radius: 50%;
+    background: var(--cyan);
+    box-shadow: 0 0 12px var(--cyan);
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.35; }
+  }
+
+  h1 {
+    font-family: var(--mono);
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+  }
+
+  .tagline {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-top: 4px;
+  }
+
+  .last-updated {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-dim);
+    text-align: right;
+  }
+
+  .metrics {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 40px;
+  }
+
+  .metric {
+    background: var(--surface);
+    padding: 20px 22px;
+  }
+
+  .metric .label {
+    font-family: var(--mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-dim);
+    margin-bottom: 8px;
+  }
+
+  .metric .value {
+    font-family: var(--mono);
+    font-size: 26px;
+    font-weight: 600;
+  }
+
+  .metric .value.cyan { color: var(--cyan); }
+  .metric .value.red { color: var(--red); }
+
+  section { margin-bottom: 40px; }
+
+  .section-title {
+    font-family: var(--mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-dim);
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 24px;
+  }
+
+  select {
+    background: var(--surface-2);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-family: var(--sans);
+    font-size: 13px;
+    margin-bottom: 20px;
+    width: 100%;
+    cursor: pointer;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+
+  th {
+    text-align: left;
+    font-family: var(--mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-dim);
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  td {
+    padding: 14px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+
+  tr:last-child td { border-bottom: none; }
+
+  .product-name { max-width: 340px; line-height: 1.4; }
+
+  .price {
+    font-family: var(--mono);
+    font-weight: 600;
+    color: var(--cyan);
+  }
+
+  .discount {
+    color: var(--amber);
+    font-size: 12px;
+    font-family: var(--mono);
+  }
+
+  .stock {
+    font-size: 11px;
+    color: var(--text-dim);
+  }
+
+  .log-entry {
+    display: flex;
+    gap: 12px;
+    font-family: var(--mono);
+    font-size: 12px;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    align-items: baseline;
+  }
+
+  .log-entry:last-child { border-bottom: none; }
+
+  .log-status {
+    width: 68px;
+    flex-shrink: 0;
+    font-weight: 600;
+  }
+
+  .log-status.success { color: var(--cyan); }
+  .log-status.failed { color: var(--red); }
+  .log-status.healed { color: var(--amber); }
+
+  .log-time { color: var(--text-dim); width: 170px; flex-shrink: 0; }
+  .log-details { color: var(--text); opacity: 0.85; }
+
+  .empty {
+    color: var(--text-dim);
+    font-family: var(--mono);
+    font-size: 13px;
+    padding: 20px 0;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div>
+      <div class="brand">
+        <div class="dot"></div>
+        <h1>PriceGuard</h1>
+      </div>
+      <div class="tagline">self-healing scraper // laptop price tracker</div>
+    </div>
+    <div class="last-updated">
+      LAST SYNC<br>2026-08-21T19:44:38.081774
+    </div>
+  </header>
+
+  <div class="metrics">
+    <div class="metric">
+      <div class="label">Products Tracked</div>
+      <div class="value">3</div>
+    </div>
+    <div class="metric">
+      <div class="label">Total Scrape Runs</div>
+      <div class="value">4</div>
+    </div>
+    <div class="metric">
+      <div class="label">Successful Runs</div>
+      <div class="value cyan">4</div>
+    </div>
+    <div class="metric">
+      <div class="label">Failed Runs</div>
+      <div class="value red">0</div>
+    </div>
+  </div>
+
+  <section>
+    <div class="section-title">Price History</div>
+    <div class="card">
+      <select id="productSelect" onchange="renderChart()"></select>
+      <canvas id="priceChart" height="90"></canvas>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-title">Current Snapshot</div>
+    <div class="card" style="padding:0;">
+      <table>
+        <thead>
+          <tr>
+            <th>Product</th>
+            <th>Price</th>
+            <th>Discount</th>
+            <th>Stock</th>
+          </tr>
+        </thead>
+        <tbody id="snapshotBody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-title">Scraper Health Log</div>
+    <div class="card" style="padding:0;">
+      <div id="healthLog"></div>
+    </div>
+  </section>
+
+</div>
+
+<script>
+const productsData = {"Asus TUF A15 AMD Ryzen 7 170 Gaming Laptop (16GB, 512GB SSD, Windows 11 Home, 4GB Graphics, 15.6 inch 144 Hz Full HD IPS Display, NVIDIA GeForce RTX 3050, MS Office Home 2024, Graphite Black, 2.30 KG)": [{"id": 1, "product_name": "Asus Tuf A15 Amd Ryzen 7 170 Gaming Laptop 16Gb 512Gb Ssd Windows 11 Home 4Gb Graphics 15 6 Inch 144 Hz Full Hd Ips Display Nvidia Geforce Rtx 3050 Ms Office Home 2024 Graphite Black 2 30 Kg ", "price_value": 77990.0, "currency": "INR", "discount": "Save ₹54,000 (40.91% off)", "stock_availability": "Not Available for your pincode", "product_url": "https://www.croma.com/asus-tuf-a15-amd-ryzen-7-170-gaming-laptop-16gb-512gb-ssd-windows-11-home-4gb-graphics-15-6-inch-144-hz-full-hd-ips-display-nvidia-geforce-rtx-3050-ms-office-home-2024-graphite-black-2-30-kg-/p/322265", "scraped_at": "2026-08-19T13:15:41.744072"}, {"id": 4, "product_name": "Asus TUF A15 AMD Ryzen 7 170 Gaming Laptop (16GB, 512GB SSD, Windows 11 Home, 4GB Graphics, 15.6 inch 144 Hz Full HD IPS Display, NVIDIA GeForce RTX 3050, MS Office Home 2024, Graphite Black, 2.30 KG)", "price_value": 77990.0, "currency": "INR", "discount": "Save ₹54,000 (40.91% off)", "stock_availability": "Not Available for your pincode", "product_url": "https://www.croma.com/asus-tuf-a15-amd-ryzen-7-170-gaming-laptop-16gb-512gb-ssd-windows-11-home-4gb-graphics-15-6-inch-144-hz-full-hd-ips-display-nvidia-geforce-rtx-3050-ms-office-home-2024-graphite-black-2-30-kg-/p/322265", "scraped_at": "2026-08-21T19:42:02.395602"}, {"id": 9, "product_name": "Asus TUF A15 AMD Ryzen 7 170 Gaming Laptop (16GB, 512GB SSD, Windows 11 Home, 4GB Graphics, 15.6 inch 144 Hz Full HD IPS Display, NVIDIA GeForce RTX 3050, MS Office Home 2024, Graphite Black, 2.30 KG)", "price_value": 77990.0, "currency": "INR", "discount": "Save ₹54,000 (40.91% off)", "stock_availability": "Not Available for your pincode", "product_url": "https://www.croma.com/asus-tuf-a15-amd-ryzen-7-170-gaming-laptop-16gb-512gb-ssd-windows-11-home-4gb-graphics-15-6-inch-144-hz-full-hd-ips-display-nvidia-geforce-rtx-3050-ms-office-home-2024-graphite-black-2-30-kg-/p/322265", "scraped_at": "2026-08-21T19:43:39.834918"}, {"id": 10, "product_name": "Asus Tuf A15 Amd Ryzen 7 170 Gaming Laptop 16Gb 512Gb Ssd Windows 11 Home 4Gb Graphics 15 6 Inch 144 Hz Full Hd Ips Display Nvidia Geforce Rtx 3050 Ms Office Home 2024 Graphite Black 2 30 Kg ", "price_value": 77990.0, "currency": "INR", "discount": "Save ₹54,000 (40.91% off)", "stock_availability": "Not Available for your pincode", "product_url": "https://www.croma.com/asus-tuf-a15-amd-ryzen-7-170-gaming-laptop-16gb-512gb-ssd-windows-11-home-4gb-graphics-15-6-inch-144-hz-full-hd-ips-display-nvidia-geforce-rtx-3050-ms-office-home-2024-graphite-black-2-30-kg-/p/322265", "scraped_at": "2026-08-21T19:44:38.081774"}], "ASUS Vivobook 16 Snapdragon X X1 26 100 Thin & Light Laptop (16GB, 512GB SSD, Windows 11 Home, 16 inch WUXGA Display, MS Office Home 2024, Cool Silver, 1.88 KG)": [{"id": 2, "product_name": "ASUS Vivobook 16 Snapdragon X X1 26 100 Thin & Light Laptop (16GB, 512GB SSD, Windows 11 Home, 16 inch WUXGA Display, MS Office Home 2024, Cool Silver, 1.88 KG)", "price_value": 64990.0, "currency": "INR", "discount": "Save ₹20,000 (23.53% off)", "stock_availability": "Not Available for your pincode", "product_url": "https://www.croma.com/asus-vivobook-16-snapdragon-x-x1-26-100-thin-light-laptop-16gb-512gb-ssd-windows-11-home-16-inch-wuxga-display-ms-office-home-2024-cool-silver-1-88-kg-/p/314355", "scraped_at": "2026-08-19T13:15:41.744072"}, {"id": 5, "product_name": "Asus Vivobook 16 Snapdragon X X1 26 100 Thin Light Laptop 16Gb 512Gb Ssd Windows 11 Home 16 Inch Wuxga Display Ms Office Home 2024 Cool Silver 1 88 Kg ", "price_value": 64990.0, "currency": "INR", "discount": "Save ₹20,000 (23.53% off)", "stock_availability": "Not Available for your pincode", "product_url": "https://www.croma.com/asus-vivobook-16-snapdragon-x-x1-26-100-thin-light-laptop-16gb-512gb-ssd-windows-11-home-16-inch-wuxga-display-ms-office-home-2024-cool-silver-1-88-kg-/p/314355", "scraped_at": "2026-08-21T19:42:02.395602"}, {"id": 8, "product_name": "Asus Vivobook 16 Snapdragon X X1 26 100 Thin Light Laptop 16Gb 512Gb Ssd Windows 11 Home 16 Inch Wuxga Display Ms Office Home 2024 Cool Silver 1 88 Kg ", "price_value": 64990.0, "currency": "INR", "discount": "Save ₹20,000 (23.53% off)", "stock_availability": "Not Available for your pincode", "product_url": "https://www.croma.com/asus-vivobook-16-snapdragon-x-x1-26-100-thin-light-laptop-16gb-512gb-ssd-windows-11-home-16-inch-wuxga-display-ms-office-home-2024-cool-silver-1-88-kg-/p/314355", "scraped_at": "2026-08-21T19:43:39.834918"}, {"id": 11, "product_name": "ASUS Vivobook 16 Snapdragon X X1 26 100 Thin & Light Laptop (16GB, 512GB SSD, Windows 11 Home, 16 inch WUXGA Display, MS Office Home 2024, Cool Silver, 1.88 KG)", "price_value": 64990.0, "currency": "INR", "discount": "Save ₹20,000 (23.53% off)", "stock_availability": "Not Available for your pincode", "product_url": "https://www.croma.com/asus-vivobook-16-snapdragon-x-x1-26-100-thin-light-laptop-16gb-512gb-ssd-windows-11-home-16-inch-wuxga-display-ms-office-home-2024-cool-silver-1-88-kg-/p/314355", "scraped_at": "2026-08-21T19:44:38.081774"}], "Lenovo LOQ 15IRX9 Intel Core i5 13th Generation Gaming Laptop (16GB, 512GB SSD, Windows 11 Home, 6GB Graphics, 15.6 Inch 144 Hz Full HD IPS Display , NVIDIA GeForce RTX 3050, MS Office Home 2024, Luna Grey, 2.38 KG": [{"id": 3, "product_name": "Lenovo LOQ 15IRX9 Intel Core i5 13th Generation Gaming Laptop (16GB, 512GB SSD, Windows 11 Home, 6GB Graphics, 15.6 Inch 144 Hz Full HD IPS Display , NVIDIA GeForce RTX 3050, MS Office Home 2024, Luna Grey, 2.38 KG", "price_value": 102990.0, "currency": "INR", "discount": "Save ₹14,500 (12.34% off)", "stock_availability": "Not Available for your pincode", "product_url": "https://www.croma.com/lenovo-loq-15irx9-intel-core-i5-13th-generation-gaming-laptop-16gb-512gb-ssd-windows-11-home-6gb-graphics-15-6-inch-144-hz-full-hd-ips-display-nvidia-geforce-rtx-3050-ms-office-home-2024-luna-grey-2-38-kg/p/316655", "scraped_at": "2026-08-19T13:15:41.744072"}, {"id": 6, "product_name": "Lenovo LOQ 15IRX9 Intel Core i5 13th Generation Gaming Laptop (16GB, 512GB SSD, Windows 11 Home, 6GB Graphics, 15.6 Inch 144 Hz Full HD IPS Display , NVIDIA GeForce RTX 3050, MS Office Home 2024, Luna Grey, 2.38 KG", "price_value": 102990.0, "currency": "INR", "discount": "Save ₹14,500 (12.34% off)", "stock_availability": "Not Available for your pincode", "product_url": "https://www.croma.com/lenovo-loq-15irx9-intel-core-i5-13th-generation-gaming-laptop-16gb-512gb-ssd-windows-11-home-6gb-graphics-15-6-inch-144-hz-full-hd-ips-display-nvidia-geforce-rtx-3050-ms-office-home-2024-luna-grey-2-38-kg/p/316655", "scraped_at": "2026-08-21T19:42:02.395602"}, {"id": 7, "product_name": "Lenovo Loq 15Irx9 Intel Core I5 13Th Generation Gaming Laptop 16Gb 512Gb Ssd Windows 11 Home 6Gb Graphics 15 6 Inch 144 Hz Full Hd Ips Display Nvidia Geforce Rtx 3050 Ms Office Home 2024 Luna Grey 2 38 Kg", "price_value": 102990.0, "currency": "INR", "discount": "Save ₹14,500 (12.34% off)", "stock_availability": "Not Available for your pincode", "product_url": "https://www.croma.com/lenovo-loq-15irx9-intel-core-i5-13th-generation-gaming-laptop-16gb-512gb-ssd-windows-11-home-6gb-graphics-15-6-inch-144-hz-full-hd-ips-display-nvidia-geforce-rtx-3050-ms-office-home-2024-luna-grey-2-38-kg/p/316655", "scraped_at": "2026-08-21T19:43:39.834918"}, {"id": 12, "product_name": "Lenovo Loq 15Irx9 Intel Core I5 13Th Generation Gaming Laptop 16Gb 512Gb Ssd Windows 11 Home 6Gb Graphics 15 6 Inch 144 Hz Full Hd Ips Display Nvidia Geforce Rtx 3050 Ms Office Home 2024 Luna Grey 2 38 Kg", "price_value": 102990.0, "currency": "INR", "discount": "Save ₹14,500 (12.34% off)", "stock_availability": "Not Available for your pincode", "product_url": "https://www.croma.com/lenovo-loq-15irx9-intel-core-i5-13th-generation-gaming-laptop-16gb-512gb-ssd-windows-11-home-6gb-graphics-15-6-inch-144-hz-full-hd-ips-display-nvidia-geforce-rtx-3050-ms-office-home-2024-luna-grey-2-38-kg/p/316655", "scraped_at": "2026-08-21T19:44:38.081774"}]};
+const healthData = [{"id": 4, "run_at": "2026-08-21T19:44:38.098419", "status": "success", "details": "3 products saved"}, {"id": 3, "run_at": "2026-08-21T19:43:39.850783", "status": "success", "details": "3 products saved"}, {"id": 2, "run_at": "2026-08-21T19:42:02.416016", "status": "success", "details": "3 products saved"}, {"id": 1, "run_at": "2026-08-19T13:15:41.764651", "status": "success", "details": "4 products saved"}];
+let chart = null;
+
+function formatRupee(v) {
+  return '₹' + Number(v).toLocaleString('en-IN');
+}
+
+function populateSelect() {
+  const sel = document.getElementById('productSelect');
+  Object.keys(productsData).forEach(name => {
+    const opt = document.createElement('option');
+    opt.value = name;
+    opt.textContent = name.length > 70 ? name.slice(0, 70) + '…' : name;
+    sel.appendChild(opt);
+  });
+}
+
+function renderChart() {
+  const sel = document.getElementById('productSelect');
+  const rows = productsData[sel.value] || [];
+  const labels = rows.map(r => r.scraped_at.slice(0, 16).replace('T', ' '));
+  const data = rows.map(r => r.price_value);
+
+  if (chart) chart.destroy();
+  const ctx = document.getElementById('priceChart').getContext('2d');
+  chart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: 'Price (₹)',
+        data: data,
+        borderColor: '#4FD1C5',
+        backgroundColor: 'rgba(79,209,197,0.08)',
+        borderWidth: 2,
+        pointBackgroundColor: '#4FD1C5',
+        pointRadius: 4,
+        tension: 0.25,
+        fill: true
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { color: '#7C8894', font: { family: 'IBM Plex Mono', size: 10 } }, grid: { color: '#232A33' } },
+        y: { ticks: { color: '#7C8894', font: { family: 'IBM Plex Mono', size: 10 }, callback: v => formatRupee(v) }, grid: { color: '#232A33' } }
+      }
+    }
+  });
+}
+
+function renderSnapshot() {
+  const body = document.getElementById('snapshotBody');
+  const latest = Object.values(productsData).map(rows => rows[rows.length - 1]);
+  latest.sort((a, b) => a.price_value - b.price_value);
+
+  if (latest.length === 0) {
+    body.innerHTML = '<tr><td colspan="4" class="empty">No data yet. Run pipeline.py to collect your first scrape.</td></tr>';
+    return;
+  }
+
+  body.innerHTML = latest.map(r => `
+    <tr>
+      <td class="product-name">${r.product_name}</td>
+      <td class="price">${formatRupee(r.price_value)}</td>
+      <td class="discount">${r.discount || '—'}</td>
+      <td class="stock">${r.stock_availability || '—'}</td>
+    </tr>
+  `).join('');
+}
+
+function renderHealth() {
+  const container = document.getElementById('healthLog');
+  if (healthData.length === 0) {
+    container.innerHTML = '<div class="empty" style="padding:20px;">No health log entries yet.</div>';
+    return;
+  }
+  container.innerHTML = healthData.map(h => `
+    <div class="log-entry">
+      <span class="log-status ${h.status}">${h.status.toUpperCase()}</span>
+      <span class="log-time">${h.run_at.slice(0, 19).replace('T', ' ')}</span>
+      <span class="log-details">${h.details || ''}</span>
+    </div>
+  `).join('');
+}
+
+populateSelect();
+renderChart();
+renderSnapshot();
+renderHealth();
+</script>
+
+</body>
+</html>
