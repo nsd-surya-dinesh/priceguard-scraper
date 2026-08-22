@@ -48,6 +48,8 @@ def build_html(prices, health):
     total_scrapes = len(set(r["scraped_at"] for r in prices))
     success_count = len([h for h in health if h["status"] == "success"])
     failed_count = len([h for h in health if h["status"] == "failed"])
+    total_runs = len(health)
+    success_rate = round((success_count / total_runs) * 100) if total_runs else 0
 
     products_json = json.dumps(products, ensure_ascii=False)
 
@@ -57,76 +59,83 @@ def build_html(prices, health):
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>PriceGuard — Live Tracker</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%230B0E11'/%3E%3Cpath d='M50 15 L80 28 L80 52 C80 72 68 85 50 90 C32 85 20 72 20 52 L20 28 Z' fill='none' stroke='%234FD1C5' stroke-width='6'/%3E%3Cpath d='M38 50 L47 60 L64 40' fill='none' stroke='%234FD1C5' stroke-width='6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='24' fill='%230E1420'/%3E%3Cpath d='M50 15 L80 28 L80 52 C80 72 68 85 50 90 C32 85 20 72 20 52 L20 28 Z' fill='none' stroke='%235EEAD4' stroke-width='6'/%3E%3Cpath d='M38 50 L47 60 L64 40' fill='none' stroke='%23FBBF6D' stroke-width='6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <style>
   :root {{
-    --bg: #0A0D10;
-    --surface: #12161B;
-    --surface-2: #1A1F26;
-    --border: #232A33;
-    --border-soft: #1B2129;
-    --text: #EDEFF2;
-    --text-dim: #7C8894;
-    --text-faint: #4B5560;
-    --cyan: #4FD1C5;
-    --cyan-dim: rgba(79,209,197,0.12);
-    --amber: #F0A868;
-    --red: #E5595E;
-    --green: #6FCF97;
+    --bg-1: #0D1420;
+    --bg-2: #131B2C;
+    --glass: rgba(255,255,255,0.045);
+    --glass-strong: rgba(255,255,255,0.07);
+    --glass-border: rgba(255,255,255,0.09);
+    --text: #F1F4F9;
+    --text-dim: #8A93A6;
+    --text-faint: #545E70;
+    --teal: #5EEAD4;
+    --amber: #FBBF6D;
+    --blue: #7DA6FF;
+    --red: #FF8A8A;
+    --green: #86EFAC;
     --mono: 'JetBrains Mono', 'Courier New', monospace;
-    --display: 'Space Grotesk', var(--sans);
-    --sans: 'Inter', -apple-system, sans-serif;
+    --sans: 'Manrope', -apple-system, sans-serif;
   }}
 
   * {{ box-sizing: border-box; margin: 0; padding: 0; }}
 
   body {{
-    background: var(--bg);
+    min-height: 100vh;
+    background:
+      radial-gradient(ellipse 900px 500px at 8% -5%, rgba(94,234,212,0.16), transparent 60%),
+      radial-gradient(ellipse 700px 500px at 95% 10%, rgba(251,191,109,0.12), transparent 60%),
+      radial-gradient(ellipse 800px 600px at 50% 100%, rgba(125,166,255,0.10), transparent 60%),
+      linear-gradient(180deg, var(--bg-1), var(--bg-2));
     color: var(--text);
     font-family: var(--sans);
-    padding: 48px 28px 90px;
-    background-image:
-      radial-gradient(circle at 12% 0%, rgba(79,209,197,0.07), transparent 42%),
-      radial-gradient(circle at 88% 15%, rgba(240,168,104,0.05), transparent 40%);
+    padding: 44px 24px 90px;
     -webkit-font-smoothing: antialiased;
   }}
 
-  .wrap {{ max-width: 1120px; margin: 0 auto; }}
+  .wrap {{ max-width: 1160px; margin: 0 auto; }}
+
+  .glass {{
+    background: var(--glass);
+    backdrop-filter: blur(24px) saturate(140%);
+    -webkit-backdrop-filter: blur(24px) saturate(140%);
+    border: 1px solid var(--glass-border);
+    border-radius: 22px;
+  }}
 
   header {{
     display: flex;
     justify-content: space-between;
-    align-items: flex-end;
-    margin-bottom: 40px;
-    border-bottom: 1px solid var(--border);
-    padding-bottom: 22px;
+    align-items: center;
+    padding: 18px 26px;
+    margin-bottom: 28px;
     flex-wrap: wrap;
-    gap: 16px;
+    gap: 14px;
   }}
 
   .brand {{ display: flex; align-items: center; gap: 12px; }}
 
   .brand .dot {{
-    width: 9px; height: 9px; border-radius: 50%;
-    background: var(--cyan);
-    box-shadow: 0 0 14px var(--cyan);
+    width: 10px; height: 10px; border-radius: 50%;
+    background: var(--teal);
+    box-shadow: 0 0 16px rgba(94,234,212,0.7);
     animation: pulse 2.2s ease-in-out infinite;
     flex-shrink: 0;
   }}
 
   @keyframes pulse {{
     0%, 100% {{ opacity: 1; }}
-    50% {{ opacity: 0.3; }}
+    50% {{ opacity: 0.35; }}
   }}
 
   h1 {{
-    font-family: var(--display);
-    font-size: 26px;
-    font-weight: 700;
-    letter-spacing: -0.02em;
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: -0.01em;
   }}
 
   .live-badge {{
@@ -134,19 +143,18 @@ def build_html(prices, health):
     font-size: 10px;
     font-weight: 500;
     letter-spacing: 0.08em;
-    color: var(--cyan);
-    background: var(--cyan-dim);
-    border: 1px solid rgba(79,209,197,0.25);
-    padding: 3px 8px;
+    color: var(--teal);
+    background: rgba(94,234,212,0.12);
+    border: 1px solid rgba(94,234,212,0.25);
+    padding: 4px 10px;
     border-radius: 20px;
-    margin-left: 4px;
   }}
 
   .tagline {{
     font-family: var(--mono);
-    font-size: 12px;
+    font-size: 11px;
     color: var(--text-dim);
-    margin-top: 6px;
+    margin-top: 3px;
   }}
 
   .last-updated {{
@@ -157,26 +165,72 @@ def build_html(prices, health):
     line-height: 1.6;
   }}
 
-  .last-updated span {{ color: var(--text-faint); letter-spacing: 0.06em; }}
+  .last-updated b {{ color: var(--text); font-weight: 500; }}
+
+  /* ---------- Hero grid: ring + metrics ---------- */
+  .hero {{
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    gap: 18px;
+    margin-bottom: 28px;
+  }}
+
+  .ring-card {{
+    padding: 26px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: 14px;
+  }}
+
+  .ring {{
+    position: relative;
+    width: 128px;
+    height: 128px;
+    border-radius: 50%;
+    background: conic-gradient(var(--teal) {success_rate}%, rgba(255,255,255,0.06) 0);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }}
+
+  .ring::before {{
+    content: '';
+    position: absolute;
+    width: 98px; height: 98px;
+    border-radius: 50%;
+    background: var(--bg-2);
+  }}
+
+  .ring .ring-value {{
+    position: relative;
+    font-size: 26px;
+    font-weight: 800;
+    z-index: 1;
+  }}
+
+  .ring-label {{
+    font-family: var(--mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-dim);
+  }}
 
   .metrics {{
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 1px;
-    background: var(--border-soft);
-    border: 1px solid var(--border-soft);
-    border-radius: 12px;
-    overflow: hidden;
-    margin-bottom: 44px;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
   }}
 
   .metric {{
-    background: var(--surface);
-    padding: 22px 24px;
-    transition: background 0.2s ease;
+    padding: 20px 22px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
   }}
-
-  .metric:hover {{ background: var(--surface-2); }}
 
   .metric .label {{
     font-family: var(--mono);
@@ -188,15 +242,15 @@ def build_html(prices, health):
   }}
 
   .metric .value {{
-    font-family: var(--display);
     font-size: 30px;
-    font-weight: 700;
+    font-weight: 800;
   }}
 
-  .metric .value.cyan {{ color: var(--cyan); }}
+  .metric .value.teal {{ color: var(--teal); }}
   .metric .value.red {{ color: var(--red); }}
+  .metric .value.amber {{ color: var(--amber); }}
 
-  section {{ margin-bottom: 44px; }}
+  section {{ margin-bottom: 28px; }}
 
   .section-title {{
     font-family: var(--mono);
@@ -204,66 +258,53 @@ def build_html(prices, health):
     text-transform: uppercase;
     letter-spacing: 0.1em;
     color: var(--text-dim);
-    margin-bottom: 16px;
+    margin-bottom: 14px;
+    padding-left: 6px;
     display: flex;
     align-items: center;
-    gap: 10px;
-  }}
-
-  .section-title::after {{
-    content: '';
-    flex: 1;
-    height: 1px;
-    background: var(--border);
+    gap: 8px;
   }}
 
   .card {{
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
     padding: 26px;
   }}
 
   select {{
-    background: var(--surface-2);
+    background: var(--glass-strong);
     color: var(--text);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 10px 14px;
+    border: 1px solid var(--glass-border);
+    border-radius: 10px;
+    padding: 11px 16px;
     font-family: var(--sans);
+    font-weight: 600;
     font-size: 13px;
     margin-bottom: 22px;
     width: 100%;
     cursor: pointer;
-    transition: border-color 0.15s ease;
   }}
-
-  select:hover {{ border-color: var(--cyan); }}
 
   .snapshot-grid {{
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
     gap: 14px;
   }}
 
   .product-card {{
-    background: var(--surface-2);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 18px 20px;
-    transition: border-color 0.15s ease, transform 0.15s ease;
+    padding: 20px 22px;
+    transition: transform 0.15s ease, border-color 0.15s ease;
   }}
 
   .product-card:hover {{
-    border-color: rgba(79,209,197,0.35);
-    transform: translateY(-1px);
+    transform: translateY(-2px);
+    border-color: rgba(94,234,212,0.3);
   }}
 
   .product-card .name {{
     font-size: 13px;
+    font-weight: 600;
     line-height: 1.4;
     color: var(--text);
-    margin-bottom: 12px;
+    margin-bottom: 14px;
     min-height: 36px;
     display: -webkit-box;
     -webkit-line-clamp: 2;
@@ -275,39 +316,56 @@ def build_html(prices, health):
     display: flex;
     align-items: baseline;
     justify-content: space-between;
-    margin-bottom: 10px;
+    margin-bottom: 14px;
   }}
 
   .product-card .price {{
-    font-family: var(--mono);
-    font-weight: 600;
-    font-size: 19px;
-    color: var(--cyan);
+    font-size: 21px;
+    font-weight: 800;
+    color: var(--teal);
   }}
 
   .trend {{
     font-family: var(--mono);
     font-size: 11px;
-    padding: 2px 7px;
-    border-radius: 5px;
-    font-weight: 500;
+    padding: 3px 9px;
+    border-radius: 20px;
+    font-weight: 600;
   }}
 
-  .trend.up {{ color: var(--red); background: rgba(229,89,94,0.1); }}
-  .trend.down {{ color: var(--green); background: rgba(111,207,151,0.1); }}
-  .trend.flat {{ color: var(--text-faint); background: rgba(124,136,148,0.08); }}
+  .trend.up {{ color: var(--red); background: rgba(255,138,138,0.12); }}
+  .trend.down {{ color: var(--green); background: rgba(134,239,172,0.12); }}
+  .trend.flat {{ color: var(--text-faint); background: rgba(255,255,255,0.05); }}
 
-  .product-card .meta-row {{
+  .discount-bar-wrap {{
+    margin-bottom: 12px;
+  }}
+
+  .discount-bar-track {{
+    width: 100%;
+    height: 6px;
+    border-radius: 6px;
+    background: rgba(255,255,255,0.06);
+    overflow: hidden;
+    margin-bottom: 6px;
+  }}
+
+  .discount-bar-fill {{
+    height: 100%;
+    border-radius: 6px;
+    background: linear-gradient(90deg, var(--amber), var(--teal));
+  }}
+
+  .discount-label {{
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--amber);
+  }}
+
+  .meta-row {{
     display: flex;
     justify-content: space-between;
     align-items: center;
-    font-size: 11px;
-  }}
-
-  .discount-tag {{
-    color: var(--amber);
-    font-family: var(--mono);
-    font-size: 11px;
   }}
 
   .stock-tag {{
@@ -315,6 +373,7 @@ def build_html(prices, health):
     color: var(--text-faint);
     text-transform: uppercase;
     letter-spacing: 0.04em;
+    font-weight: 600;
   }}
 
   .log-entry {{
@@ -322,17 +381,17 @@ def build_html(prices, health):
     gap: 12px;
     font-family: var(--mono);
     font-size: 12px;
-    padding: 11px 16px;
-    border-bottom: 1px solid var(--border-soft);
+    padding: 13px 20px;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
     align-items: baseline;
   }}
 
   .log-entry:last-child {{ border-bottom: none; }}
 
   .log-status {{
-    width: 70px;
+    width: 74px;
     flex-shrink: 0;
-    font-weight: 600;
+    font-weight: 700;
     display: flex;
     align-items: center;
     gap: 6px;
@@ -344,47 +403,47 @@ def build_html(prices, health):
     flex-shrink: 0;
   }}
 
-  .log-status.success {{ color: var(--cyan); }}
-  .log-status.success::before {{ background: var(--cyan); }}
+  .log-status.success {{ color: var(--teal); }}
+  .log-status.success::before {{ background: var(--teal); box-shadow: 0 0 6px var(--teal); }}
   .log-status.failed {{ color: var(--red); }}
-  .log-status.failed::before {{ background: var(--red); }}
+  .log-status.failed::before {{ background: var(--red); box-shadow: 0 0 6px var(--red); }}
   .log-status.healed {{ color: var(--amber); }}
-  .log-status.healed::before {{ background: var(--amber); }}
+  .log-status.healed::before {{ background: var(--amber); box-shadow: 0 0 6px var(--amber); }}
 
   .log-time {{ color: var(--text-dim); width: 175px; flex-shrink: 0; }}
-  .log-details {{ color: var(--text); opacity: 0.8; }}
+  .log-details {{ color: var(--text); opacity: 0.75; }}
 
   .empty {{
     color: var(--text-dim);
     font-family: var(--mono);
     font-size: 13px;
-    padding: 24px 0;
+    padding: 30px 0;
     text-align: center;
   }}
 
   footer {{
-    margin-top: 60px;
-    padding-top: 20px;
-    border-top: 1px solid var(--border-soft);
+    margin-top: 50px;
+    padding: 18px 26px;
     font-family: var(--mono);
     font-size: 11px;
     color: var(--text-faint);
     text-align: center;
   }}
 
-  @media (max-width: 720px) {{
-    body {{ padding: 28px 16px 60px; }}
+  @media (max-width: 760px) {{
+    body {{ padding: 26px 14px 60px; }}
     header {{ flex-direction: column; align-items: flex-start; }}
     .last-updated {{ text-align: left; }}
+    .hero {{ grid-template-columns: 1fr; }}
     .metrics {{ grid-template-columns: repeat(2, 1fr); }}
-    .card {{ padding: 18px; }}
+    .card {{ padding: 20px; }}
   }}
 </style>
 </head>
 <body>
 <div class="wrap">
 
-  <header>
+  <header class="glass">
     <div>
       <div class="brand">
         <div class="dot"></div>
@@ -394,32 +453,38 @@ def build_html(prices, health):
       <div class="tagline">self-healing scraper // laptop price tracker</div>
     </div>
     <div class="last-updated">
-      <span>LAST SYNC</span><br>{last_updated}
+      LAST SYNC<br><b>{last_updated}</b>
     </div>
   </header>
 
-  <div class="metrics">
-    <div class="metric">
-      <div class="label">Products Tracked</div>
-      <div class="value">{len(products)}</div>
+  <div class="hero">
+    <div class="ring-card glass">
+      <div class="ring"><span class="ring-value">{success_rate}%</span></div>
+      <div class="ring-label">Scrape Success Rate</div>
     </div>
-    <div class="metric">
-      <div class="label">Total Scrape Runs</div>
-      <div class="value">{total_scrapes}</div>
-    </div>
-    <div class="metric">
-      <div class="label">Successful Runs</div>
-      <div class="value cyan">{success_count}</div>
-    </div>
-    <div class="metric">
-      <div class="label">Failed Runs</div>
-      <div class="value red">{failed_count}</div>
+    <div class="metrics">
+      <div class="metric glass">
+        <div class="label">Products Tracked</div>
+        <div class="value">{len(products)}</div>
+      </div>
+      <div class="metric glass">
+        <div class="label">Total Scrape Runs</div>
+        <div class="value">{total_scrapes}</div>
+      </div>
+      <div class="metric glass">
+        <div class="label">Successful Runs</div>
+        <div class="value teal">{success_count}</div>
+      </div>
+      <div class="metric glass">
+        <div class="label">Failed Runs</div>
+        <div class="value red">{failed_count}</div>
+      </div>
     </div>
   </div>
 
   <section>
     <div class="section-title">Price History</div>
-    <div class="card">
+    <div class="card glass">
       <select id="productSelect" onchange="renderChart()"></select>
       <canvas id="priceChart" height="90"></canvas>
     </div>
@@ -432,12 +497,12 @@ def build_html(prices, health):
 
   <section>
     <div class="section-title">Scraper Health Log</div>
-    <div class="card" style="padding:0;">
+    <div class="card glass" style="padding:0;">
       <div id="healthLog"></div>
     </div>
   </section>
 
-  <footer>PriceGuard — built with Bright Data Scraper Studio for the Scrape-Verse Hackathon</footer>
+  <footer class="glass">PriceGuard — built with Bright Data Scraper Studio for the Scrape-Verse Hackathon</footer>
 
 </div>
 
@@ -448,6 +513,12 @@ let chart = null;
 
 function formatRupee(v) {{
   return '₹' + Number(v).toLocaleString('en-IN');
+}}
+
+function extractDiscountPercent(discountStr) {{
+  if (!discountStr) return 0;
+  const m = discountStr.match(/(\\d+\\.?\\d*)%/);
+  return m ? parseFloat(m[1]) : 0;
 }}
 
 function populateSelect() {{
@@ -475,15 +546,15 @@ function renderChart() {{
       datasets: [{{
         label: 'Price (₹)',
         data: data,
-        borderColor: '#4FD1C5',
-        backgroundColor: 'rgba(79,209,197,0.08)',
-        borderWidth: 2,
-        pointBackgroundColor: '#4FD1C5',
-        pointBorderColor: '#0A0D10',
+        borderColor: '#5EEAD4',
+        backgroundColor: 'rgba(94,234,212,0.10)',
+        borderWidth: 2.5,
+        pointBackgroundColor: '#5EEAD4',
+        pointBorderColor: '#131B2C',
         pointBorderWidth: 2,
         pointRadius: 5,
         pointHoverRadius: 7,
-        tension: 0.3,
+        tension: 0.35,
         fill: true
       }}]
     }},
@@ -492,8 +563,8 @@ function renderChart() {{
       plugins: {{
         legend: {{ display: false }},
         tooltip: {{
-          backgroundColor: '#1A1F26',
-          borderColor: '#232A33',
+          backgroundColor: '#131B2C',
+          borderColor: 'rgba(255,255,255,0.1)',
           borderWidth: 1,
           titleFont: {{ family: 'JetBrains Mono', size: 11 }},
           bodyFont: {{ family: 'JetBrains Mono', size: 12 }},
@@ -502,8 +573,8 @@ function renderChart() {{
         }}
       }},
       scales: {{
-        x: {{ ticks: {{ color: '#7C8894', font: {{ family: 'JetBrains Mono', size: 10 }} }}, grid: {{ color: '#1B2129' }} }},
-        y: {{ ticks: {{ color: '#7C8894', font: {{ family: 'JetBrains Mono', size: 10 }}, callback: v => formatRupee(v) }}, grid: {{ color: '#1B2129' }} }}
+        x: {{ ticks: {{ color: '#8A93A6', font: {{ family: 'JetBrains Mono', size: 10 }} }}, grid: {{ color: 'rgba(255,255,255,0.05)' }} }},
+        y: {{ ticks: {{ color: '#8A93A6', font: {{ family: 'JetBrains Mono', size: 10 }}, callback: v => formatRupee(v) }}, grid: {{ color: 'rgba(255,255,255,0.05)' }} }}
       }}
     }}
   }});
@@ -514,7 +585,7 @@ function renderSnapshot() {{
   const entries = Object.entries(productsData);
 
   if (entries.length === 0) {{
-    grid.innerHTML = '<div class="empty">No data yet. Run pipeline.py to collect your first scrape.</div>';
+    grid.innerHTML = '<div class="empty glass" style="grid-column: 1/-1;">No data yet. Run pipeline.py to collect your first scrape.</div>';
     return;
   }}
 
@@ -529,15 +600,21 @@ function renderSnapshot() {{
       else if (diff < 0) trendHtml = `<span class="trend down">▼ ${{formatRupee(Math.abs(diff))}}</span>`;
     }}
 
+    const discountPct = extractDiscountPercent(latest.discount);
+    const barWidth = Math.min(discountPct, 100);
+
     return `
-      <div class="product-card">
+      <div class="product-card glass">
         <div class="name">${{name}}</div>
         <div class="price-row">
           <span class="price">${{formatRupee(latest.price_value)}}</span>
           ${{trendHtml}}
         </div>
+        <div class="discount-bar-wrap">
+          <div class="discount-bar-track"><div class="discount-bar-fill" style="width:${{barWidth}}%"></div></div>
+          <div class="discount-label">${{latest.discount || 'No discount'}}</div>
+        </div>
         <div class="meta-row">
-          <span class="discount-tag">${{latest.discount || 'No discount'}}</span>
           <span class="stock-tag">${{latest.stock_availability || '—'}}</span>
         </div>
       </div>
@@ -550,7 +627,7 @@ function renderSnapshot() {{
 function renderHealth() {{
   const container = document.getElementById('healthLog');
   if (healthData.length === 0) {{
-    container.innerHTML = '<div class="empty" style="padding:20px;">No health log entries yet.</div>';
+    container.innerHTML = '<div class="empty">No health log entries yet.</div>';
     return;
   }}
   container.innerHTML = healthData.map(h => `
