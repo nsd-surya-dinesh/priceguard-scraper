@@ -4,7 +4,7 @@ import os
 from datetime import datetime
 
 DB_FILE = "prices.db"
-OUTPUT_FILE = "dashboard.html"
+OUTPUT_FILE = "index.html"
 
 
 def load_data():
@@ -32,493 +32,340 @@ def build_html(prices, health):
 
     products = {}
     for url, rows in grouped_by_url.items():
-        # Prefer the longest/most complete name seen across all runs for this URL
-        # (real scraped names are far longer than short URL-slug fallbacks like "P").
         best_name = max((r["product_name"] or "" for r in rows), key=len)
         if not best_name:
             best_name = "Unknown Product"
         products[best_name] = rows
-
-    latest_snapshot = []
-    for name, rows in products.items():
-        latest_snapshot.append(rows[-1])
-    latest_snapshot.sort(key=lambda r: r["price_value"])
 
     last_updated = prices[-1]["scraped_at"] if prices else "No data yet"
     total_scrapes = len(set(r["scraped_at"] for r in prices))
     success_count = len([h for h in health if h["status"] == "success"])
     failed_count = len([h for h in health if h["status"] == "failed"])
     total_runs = len(health)
-    success_rate = round((success_count / total_runs) * 100) if total_runs else 0
+    success_pct = round((success_count / total_runs) * 100, 1) if total_runs else 0.0
+    failed_pct = round((failed_count / total_runs) * 100, 1) if total_runs else 0.0
+
+    # Pick the "hero" product for the Current tab: the one with the biggest
+    # price drop (most interesting story), falling back to the first product.
+    hero_name = None
+    hero_drop = -1
+    for name, rows in products.items():
+        if len(rows) > 1:
+            drop = rows[-2]["price_value"] - rows[-1]["price_value"]
+            if drop > hero_drop:
+                hero_drop = drop
+                hero_name = name
+    if hero_name is None and products:
+        hero_name = next(iter(products))
 
     products_json = json.dumps(products, ensure_ascii=False)
+    health_json = json.dumps(health, ensure_ascii=False)
 
     html = f"""<!DOCTYPE html>
-<html lang="en">
+<html class="dark" lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>PriceGuard — Live Tracker</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='24' fill='%230E1420'/%3E%3Cpath d='M50 15 L80 28 L80 52 C80 72 68 85 50 90 C32 85 20 72 20 52 L20 28 Z' fill='none' stroke='%235EEAD4' stroke-width='6'/%3E%3Cpath d='M38 50 L47 60 L64 40' fill='none' stroke='%23FBBF6D' stroke-width='6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
+<title>PriceGuard — Self-Healing Scraper</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%2310141a'/%3E%3Cpath d='M50 15 L80 28 L80 52 C80 72 68 85 50 90 C32 85 20 72 20 52 L20 28 Z' fill='none' stroke='%2300f0ff' stroke-width='6'/%3E%3Cpath d='M38 50 L47 60 L64 40' fill='none' stroke='%2300f0ff' stroke-width='6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Hanken+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <style>
-  :root {{
-    --bg-1: #0D1420;
-    --bg-2: #131B2C;
-    --glass: rgba(255,255,255,0.045);
-    --glass-strong: rgba(255,255,255,0.07);
-    --glass-border: rgba(255,255,255,0.09);
-    --text: #F1F4F9;
-    --text-dim: #8A93A6;
-    --text-faint: #545E70;
-    --teal: #5EEAD4;
-    --amber: #FBBF6D;
-    --blue: #7DA6FF;
-    --red: #FF8A8A;
-    --green: #86EFAC;
-    --mono: 'JetBrains Mono', 'Courier New', monospace;
-    --sans: 'Manrope', -apple-system, sans-serif;
-  }}
+    @font-face {{
+        font-family: 'Geist';
+        src: local('Helvetica Neue'), local('Arial'), sans-serif;
+    }}
 
-  * {{ box-sizing: border-box; margin: 0; padding: 0; }}
+    body {{
+        background-color: #05070A;
+        color: #dfe2eb;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        min-height: max(884px, 100dvh);
+    }}
 
-  body {{
-    min-height: 100vh;
-    background:
-      radial-gradient(ellipse 900px 500px at 8% -5%, rgba(94,234,212,0.16), transparent 60%),
-      radial-gradient(ellipse 700px 500px at 95% 10%, rgba(251,191,109,0.12), transparent 60%),
-      radial-gradient(ellipse 800px 600px at 50% 100%, rgba(125,166,255,0.10), transparent 60%),
-      linear-gradient(180deg, var(--bg-1), var(--bg-2));
-    color: var(--text);
-    font-family: var(--sans);
-    padding: 44px 24px 90px;
-    -webkit-font-smoothing: antialiased;
-  }}
+    .glass-panel {{
+        background: rgba(18, 24, 31, 0.4);
+        backdrop-filter: blur(24px);
+        -webkit-backdrop-filter: blur(24px);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.1), 0 8px 32px rgba(0,0,0,0.4);
+    }}
 
-  .wrap {{ max-width: 1160px; margin: 0 auto; }}
+    .glass-nav {{
+        background: rgba(10, 14, 20, 0.75);
+        backdrop-filter: blur(32px);
+        -webkit-backdrop-filter: blur(32px);
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+        box-shadow: 0 -4px 24px rgba(0,0,0,0.5);
+    }}
 
-  .glass {{
-    background: var(--glass);
-    backdrop-filter: blur(24px) saturate(140%);
-    -webkit-backdrop-filter: blur(24px) saturate(140%);
-    border: 1px solid var(--glass-border);
-    border-radius: 22px;
-  }}
+    .text-glow {{ text-shadow: 0 0 12px rgba(0, 240, 255, 0.3); }}
 
-  header {{
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 18px 26px;
-    margin-bottom: 28px;
-    flex-wrap: wrap;
-    gap: 14px;
-  }}
+    ::-webkit-scrollbar {{ display: none; }}
 
-  .brand {{ display: flex; align-items: center; gap: 12px; }}
+    .app-shell {{ max-width: 480px; margin: 0 auto; }}
 
-  .brand .dot {{
-    width: 10px; height: 10px; border-radius: 50%;
-    background: var(--teal);
-    box-shadow: 0 0 16px rgba(94,234,212,0.7);
-    animation: pulse 2.2s ease-in-out infinite;
-    flex-shrink: 0;
-  }}
+    .tab-panel {{ display: none; }}
+    .tab-panel.active {{ display: block; }}
 
-  @keyframes pulse {{
-    0%, 100% {{ opacity: 1; }}
-    50% {{ opacity: 0.35; }}
-  }}
+    .nav-link.active {{ color: #00f0ff; }}
+    .nav-link {{ color: rgba(223,226,235,0.55); }}
 
-  h1 {{
-    font-size: 22px;
-    font-weight: 800;
-    letter-spacing: -0.01em;
-  }}
+    .product-card {{
+        transition: border-color 0.15s ease, transform 0.15s ease;
+    }}
+    .product-card:hover {{
+        border-color: rgba(0,240,255,0.4);
+        transform: translateY(-2px);
+    }}
 
-  .live-badge {{
-    font-family: var(--mono);
-    font-size: 10px;
-    font-weight: 500;
-    letter-spacing: 0.08em;
-    color: var(--teal);
-    background: rgba(94,234,212,0.12);
-    border: 1px solid rgba(94,234,212,0.25);
-    padding: 4px 10px;
-    border-radius: 20px;
-  }}
-
-  .tagline {{
-    font-family: var(--mono);
-    font-size: 11px;
-    color: var(--text-dim);
-    margin-top: 3px;
-  }}
-
-  .last-updated {{
-    font-family: var(--mono);
-    font-size: 11px;
-    color: var(--text-dim);
-    text-align: right;
-    line-height: 1.6;
-  }}
-
-  .last-updated b {{ color: var(--text); font-weight: 500; }}
-
-  /* ---------- Hero grid: ring + metrics ---------- */
-  .hero {{
-    display: grid;
-    grid-template-columns: 260px 1fr;
-    gap: 18px;
-    margin-bottom: 28px;
-  }}
-
-  .ring-card {{
-    padding: 26px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    gap: 14px;
-  }}
-
-  .ring {{
-    position: relative;
-    width: 128px;
-    height: 128px;
-    border-radius: 50%;
-    background: conic-gradient(var(--teal) {success_rate}%, rgba(255,255,255,0.06) 0);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }}
-
-  .ring::before {{
-    content: '';
-    position: absolute;
-    width: 98px; height: 98px;
-    border-radius: 50%;
-    background: var(--bg-2);
-  }}
-
-  .ring .ring-value {{
-    position: relative;
-    font-size: 26px;
-    font-weight: 800;
-    z-index: 1;
-  }}
-
-  .ring-label {{
-    font-family: var(--mono);
-    font-size: 10px;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: var(--text-dim);
-  }}
-
-  .metrics {{
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 14px;
-  }}
-
-  .metric {{
-    padding: 20px 22px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-  }}
-
-  .metric .label {{
-    font-family: var(--mono);
-    font-size: 10px;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: var(--text-dim);
-    margin-bottom: 10px;
-  }}
-
-  .metric .value {{
-    font-size: 30px;
-    font-weight: 800;
-  }}
-
-  .metric .value.teal {{ color: var(--teal); }}
-  .metric .value.red {{ color: var(--red); }}
-  .metric .value.amber {{ color: var(--amber); }}
-
-  section {{ margin-bottom: 28px; }}
-
-  .section-title {{
-    font-family: var(--mono);
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: var(--text-dim);
-    margin-bottom: 14px;
-    padding-left: 6px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }}
-
-  .card {{
-    padding: 26px;
-  }}
-
-  select {{
-    background: var(--glass-strong);
-    color: var(--text);
-    border: 1px solid var(--glass-border);
-    border-radius: 10px;
-    padding: 11px 16px;
-    font-family: var(--sans);
-    font-weight: 600;
-    font-size: 13px;
-    margin-bottom: 22px;
-    width: 100%;
-    cursor: pointer;
-  }}
-
-  .snapshot-grid {{
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 14px;
-  }}
-
-  .product-card {{
-    padding: 20px 22px;
-    transition: transform 0.15s ease, border-color 0.15s ease;
-  }}
-
-  .product-card:hover {{
-    transform: translateY(-2px);
-    border-color: rgba(94,234,212,0.3);
-  }}
-
-  .product-card .name {{
-    font-size: 13px;
-    font-weight: 600;
-    line-height: 1.4;
-    color: var(--text);
-    margin-bottom: 14px;
-    min-height: 36px;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }}
-
-  .product-card .price-row {{
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    margin-bottom: 14px;
-  }}
-
-  .product-card .price {{
-    font-size: 21px;
-    font-weight: 800;
-    color: var(--teal);
-  }}
-
-  .trend {{
-    font-family: var(--mono);
-    font-size: 11px;
-    padding: 3px 9px;
-    border-radius: 20px;
-    font-weight: 600;
-  }}
-
-  .trend.up {{ color: var(--red); background: rgba(255,138,138,0.12); }}
-  .trend.down {{ color: var(--green); background: rgba(134,239,172,0.12); }}
-  .trend.flat {{ color: var(--text-faint); background: rgba(255,255,255,0.05); }}
-
-  .discount-bar-wrap {{
-    margin-bottom: 12px;
-  }}
-
-  .discount-bar-track {{
-    width: 100%;
-    height: 6px;
-    border-radius: 6px;
-    background: rgba(255,255,255,0.06);
-    overflow: hidden;
-    margin-bottom: 6px;
-  }}
-
-  .discount-bar-fill {{
-    height: 100%;
-    border-radius: 6px;
-    background: linear-gradient(90deg, var(--amber), var(--teal));
-  }}
-
-  .discount-label {{
-    font-family: var(--mono);
-    font-size: 11px;
-    color: var(--amber);
-  }}
-
-  .meta-row {{
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }}
-
-  .stock-tag {{
-    font-size: 10px;
-    color: var(--text-faint);
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    font-weight: 600;
-  }}
-
-  .log-entry {{
-    display: flex;
-    gap: 12px;
-    font-family: var(--mono);
-    font-size: 12px;
-    padding: 13px 20px;
-    border-bottom: 1px solid rgba(255,255,255,0.05);
-    align-items: baseline;
-  }}
-
-  .log-entry:last-child {{ border-bottom: none; }}
-
-  .log-status {{
-    width: 74px;
-    flex-shrink: 0;
-    font-weight: 700;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }}
-
-  .log-status::before {{
-    content: '';
-    width: 6px; height: 6px; border-radius: 50%;
-    flex-shrink: 0;
-  }}
-
-  .log-status.success {{ color: var(--teal); }}
-  .log-status.success::before {{ background: var(--teal); box-shadow: 0 0 6px var(--teal); }}
-  .log-status.failed {{ color: var(--red); }}
-  .log-status.failed::before {{ background: var(--red); box-shadow: 0 0 6px var(--red); }}
-  .log-status.healed {{ color: var(--amber); }}
-  .log-status.healed::before {{ background: var(--amber); box-shadow: 0 0 6px var(--amber); }}
-
-  .log-time {{ color: var(--text-dim); width: 175px; flex-shrink: 0; }}
-  .log-details {{ color: var(--text); opacity: 0.75; }}
-
-  .empty {{
-    color: var(--text-dim);
-    font-family: var(--mono);
-    font-size: 13px;
-    padding: 30px 0;
-    text-align: center;
-  }}
-
-  footer {{
-    margin-top: 50px;
-    padding: 18px 26px;
-    font-family: var(--mono);
-    font-size: 11px;
-    color: var(--text-faint);
-    text-align: center;
-  }}
-
-  @media (max-width: 760px) {{
-    body {{ padding: 26px 14px 60px; }}
-    header {{ flex-direction: column; align-items: flex-start; }}
-    .last-updated {{ text-align: left; }}
-    .hero {{ grid-template-columns: 1fr; }}
-    .metrics {{ grid-template-columns: repeat(2, 1fr); }}
-    .card {{ padding: 20px; }}
-  }}
+    .log-row {{ border-bottom: 1px solid rgba(255,255,255,0.05); }}
+    .log-row:last-child {{ border-bottom: none; }}
 </style>
+<script id="tailwind-config">
+    tailwind.config = {{
+        darkMode: "class",
+        theme: {{
+            extend: {{
+                colors: {{
+                    primary: "#00f0ff",
+                    "on-primary": "#00363a",
+                    secondary: "#bcff5f",
+                    "on-secondary": "#203600",
+                    error: "#ffb4ab",
+                    background: "#10141a",
+                    "on-background": "#dfe2eb",
+                    surface: "#10141a",
+                    "surface-container": "#1c2026",
+                    "surface-container-low": "#181c22",
+                    "surface-container-high": "#262a31",
+                    "on-surface": "#dfe2eb",
+                    "on-surface-variant": "#8a9696",
+                }},
+                spacing: {{ xl: "32px", lg: "24px", gutter: "16px", xs: "8px", sm: "12px", base: "4px", margin: "16px", md: "16px" }},
+                fontFamily: {{
+                    "headline-md": ["Geist"], "headline-sm": ["Geist"],
+                    "display-lg": ["Geist"], "data-lg": ["Geist", "sans-serif"],
+                    "data-md": ["Geist", "sans-serif"],
+                    "label-xs": ["Inter", "sans-serif"],
+                    "body-lg": ["Inter", "sans-serif"], "body-md": ["Inter", "sans-serif"],
+                }},
+            }},
+        }},
+    }}
+</script>
 </head>
-<body>
-<div class="wrap">
+<body class="relative min-h-screen w-full flex flex-col font-body-md">
 
-  <header class="glass">
+<div class="app-shell relative flex flex-col min-h-screen">
+
+<div class="fixed inset-0 z-0 pointer-events-none opacity-20" style="max-width:480px; margin:0 auto; background: radial-gradient(circle at top right, rgba(0, 240, 255, 0.08) 0%, transparent 50%), radial-gradient(circle at bottom left, rgba(149, 228, 0, 0.05) 0%, transparent 40%);"></div>
+
+<main class="flex-1 overflow-y-auto z-10 pb-28">
+
+  <header class="px-margin pt-xl pb-md flex items-center justify-between">
     <div>
-      <div class="brand">
-        <div class="dot"></div>
-        <h1>PriceGuard</h1>
-        <span class="live-badge">LIVE</span>
-      </div>
-      <div class="tagline">self-healing scraper // laptop price tracker</div>
+      <h1 class="font-display-lg text-[28px] font-bold text-on-surface tracking-tight">PriceGuard</h1>
+      <p class="font-label-xs text-on-surface-variant/60 uppercase tracking-widest mt-1">Self-healing scraper</p>
     </div>
-    <div class="last-updated">
-      LAST SYNC<br><b>{last_updated}</b>
-    </div>
+    <span class="text-[10px] font-label-xs text-on-surface-variant text-right leading-tight">LAST SYNC<br><span class="text-primary/80">{last_updated[:16].replace('T', ' ')}</span></span>
   </header>
 
-  <div class="hero">
-    <div class="ring-card glass">
-      <div class="ring"><span class="ring-value">{success_rate}%</span></div>
-      <div class="ring-label">Scrape Success Rate</div>
-    </div>
-    <div class="metrics">
-      <div class="metric glass">
-        <div class="label">Products Tracked</div>
-        <div class="value">{len(products)}</div>
+  <!-- ===================== TAB: CURRENT ===================== -->
+  <div id="tab-current" class="tab-panel active">
+
+    <section class="px-margin mb-lg">
+      <div class="grid grid-cols-2 gap-xs">
+        <div class="glass-panel rounded-2xl p-sm flex flex-col justify-between h-20 relative overflow-hidden">
+          <span class="font-label-xs text-on-surface-variant z-10 opacity-80 uppercase tracking-wider">Products Tracked</span>
+          <div class="font-data-lg text-on-surface z-10 text-[20px]">{len(products)}</div>
+        </div>
+        <div class="glass-panel rounded-2xl p-sm flex flex-col justify-between h-20 relative overflow-hidden">
+          <span class="font-label-xs text-on-surface-variant z-10 opacity-80 uppercase tracking-wider">Total Runs</span>
+          <div class="font-data-lg text-secondary z-10 text-[20px]">{total_scrapes}</div>
+        </div>
+        <div class="glass-panel rounded-2xl p-sm flex flex-col justify-between h-20 relative overflow-hidden">
+          <span class="font-label-xs text-on-surface-variant z-10 opacity-80 uppercase tracking-wider">Successful</span>
+          <div class="font-data-lg text-on-surface z-10 text-[20px]">{success_pct}%</div>
+        </div>
+        <div class="glass-panel rounded-2xl p-sm flex flex-col justify-between h-20 relative overflow-hidden">
+          <span class="font-label-xs text-on-surface-variant z-10 opacity-80 uppercase tracking-wider">Failed</span>
+          <div class="font-data-lg text-error z-10 text-[20px]">{failed_pct}%</div>
+        </div>
       </div>
-      <div class="metric glass">
-        <div class="label">Total Scrape Runs</div>
-        <div class="value">{total_scrapes}</div>
+    </section>
+
+    <section class="px-margin mb-xl">
+      <div class="glass-panel rounded-3xl p-md relative border-white/10" id="heroCard">
+        <!-- filled by JS -->
       </div>
-      <div class="metric glass">
-        <div class="label">Successful Runs</div>
-        <div class="value teal">{success_count}</div>
-      </div>
-      <div class="metric glass">
-        <div class="label">Failed Runs</div>
-        <div class="value red">{failed_count}</div>
-      </div>
-    </div>
+    </section>
+
   </div>
 
-  <section>
-    <div class="section-title">Price History</div>
-    <div class="card glass">
-      <select id="productSelect" onchange="renderChart()"></select>
-      <canvas id="priceChart" height="90"></canvas>
-    </div>
-  </section>
+  <!-- ===================== TAB: HISTORY ===================== -->
+  <div id="tab-history" class="tab-panel">
+    <section class="px-margin mb-lg">
+      <h2 class="font-headline-sm text-[18px] font-semibold text-on-surface mb-3">Price History</h2>
+      <select id="productSelect" onchange="renderChart()" class="w-full bg-surface-container-low border border-white/10 text-on-surface text-[13px] rounded-xl px-3 py-2.5 mb-4"></select>
+      <div class="glass-panel rounded-3xl p-md">
+        <canvas id="priceChart" height="200"></canvas>
+      </div>
+    </section>
+  </div>
 
-  <section>
-    <div class="section-title">Current Snapshot</div>
-    <div class="snapshot-grid" id="snapshotGrid"></div>
-  </section>
+  <!-- ===================== TAB: LOGS ===================== -->
+  <div id="tab-logs" class="tab-panel">
+    <section class="px-margin mb-lg">
+      <h2 class="font-headline-sm text-[18px] font-semibold text-on-surface mb-3">Scraper Health Log</h2>
+      <div class="glass-panel rounded-3xl overflow-hidden" id="healthLog"></div>
+    </section>
+  </div>
 
-  <section>
-    <div class="section-title">Scraper Health Log</div>
-    <div class="card glass" style="padding:0;">
-      <div id="healthLog"></div>
-    </div>
-  </section>
+  <!-- ===================== TAB: SNAPSHOT ===================== -->
+  <div id="tab-snapshot" class="tab-panel">
+    <section class="px-margin mb-lg">
+      <h2 class="font-headline-sm text-[18px] font-semibold text-on-surface mb-3">Current Snapshot</h2>
+      <div class="flex flex-col gap-3" id="snapshotGrid"></div>
+    </section>
+  </div>
 
-  <footer class="glass">PriceGuard — built with Bright Data Scraper Studio for the Scrape-Verse Hackathon</footer>
+</main>
+
+<nav class="fixed bottom-0 w-full z-50 rounded-t-2xl glass-nav flex justify-around items-center px-2 py-2 pb-8 pt-4" style="max-width:480px; left:50%; transform:translateX(-50%);">
+  <a class="nav-link active flex flex-col items-center justify-center transition-all duration-150" href="javascript:void(0)" onclick="showTab('current', this)">
+    <span class="material-symbols-outlined mb-1 text-[24px]" style="font-variation-settings: 'FILL' 1;">monitoring</span>
+    <span class="font-label-xs font-semibold">Current</span>
+  </a>
+  <a class="nav-link flex flex-col items-center justify-center transition-all" href="javascript:void(0)" onclick="showTab('history', this)">
+    <span class="material-symbols-outlined mb-1 text-[24px]">timeline</span>
+    <span class="font-label-xs">History</span>
+  </a>
+  <a class="nav-link flex flex-col items-center justify-center transition-all" href="javascript:void(0)" onclick="showTab('logs', this)">
+    <span class="material-symbols-outlined mb-1 text-[24px]">terminal</span>
+    <span class="font-label-xs">Logs</span>
+  </a>
+  <a class="nav-link flex flex-col items-center justify-center transition-all" href="javascript:void(0)" onclick="showTab('snapshot', this)">
+    <span class="material-symbols-outlined mb-1 text-[24px]">insert_chart</span>
+    <span class="font-label-xs">Snapshot</span>
+  </a>
+</nav>
 
 </div>
 
 <script>
 const productsData = {products_json};
-const healthData = {json.dumps(health, ensure_ascii=False)};
+const healthData = {health_json};
+const heroName = {json.dumps(hero_name, ensure_ascii=False)};
 let chart = null;
 
-function formatRupee(v) {{
-  return '₹' + Number(v).toLocaleString('en-IN');
+function formatRupee(v) {{ return '₹' + Number(v).toLocaleString('en-IN'); }}
+
+function showTab(name, el) {{
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  document.querySelectorAll('.nav-link').forEach(n => n.classList.remove('active'));
+  el.classList.add('active');
+  if (name === 'history') renderChart();
 }}
 
-function extractDiscountPercent(discountStr) {{
-  if (!discountStr) return 0;
-  const m = discountStr.match(/(\\d+\\.?\\d*)%/);
-  return m ? parseFloat(m[1]) : 0;
+function buildSvgPath(values) {{
+  if (values.length === 0) return {{ line: '', fill: '' }};
+  if (values.length === 1) values = [values[0], values[0]];
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+  const range = (max - min) || 1;
+  const n = values.length;
+  const pts = values.map((v, i) => {{
+    const x = (i / (n - 1)) * 100;
+    const y = 90 - ((v - min) / range) * 80;
+    return [x, y];
+  }});
+  let line = `M${{pts[0][0]}},${{pts[0][1]}}`;
+  for (let i = 1; i < pts.length; i++) {{
+    const [px, py] = pts[i - 1];
+    const [cx, cy] = pts[i];
+    const mx = (px + cx) / 2;
+    line += ` Q${{mx}},${{py}} ${{cx}},${{cy}}`;
+  }}
+  const fill = line + ` L100,100 L0,100 Z`;
+  return {{ line, fill, pts }};
+}}
+
+function renderHero() {{
+  const card = document.getElementById('heroCard');
+  if (!heroName || !productsData[heroName]) {{
+    card.innerHTML = '<div class="text-on-surface-variant font-label-xs text-center py-10">No data yet. Run pipeline.py to collect your first scrape.</div>';
+    return;
+  }}
+
+  const rows = productsData[heroName];
+  const latest = rows[rows.length - 1];
+  const prev = rows.length > 1 ? rows[rows.length - 2] : null;
+  const diff = prev ? latest.price_value - prev.price_value : 0;
+  const trendIcon = diff < 0 ? 'trending_down' : (diff > 0 ? 'trending_up' : 'trending_flat');
+  const trendColor = diff < 0 ? 'text-secondary' : (diff > 0 ? 'text-error' : 'text-on-surface-variant');
+  const trendText = diff === 0 ? '—' : formatRupee(Math.abs(diff));
+
+  const values = rows.map(r => r.price_value);
+  const {{ line, fill, pts }} = buildSvgPath(values);
+
+  const labels = ['Mon','Tue','Wed','Thu','Now'];
+  const shortLabels = rows.length <= 5
+    ? rows.map((r, i) => i === rows.length - 1 ? 'Now' : labels[i % labels.length])
+    : rows.map((r, i) => i === rows.length - 1 ? 'Now' : '');
+
+  const dots = (pts || []).slice(0, -1).map(([x, y]) =>
+    `<circle cx="${{x}}" cy="${{y}}" fill="#10141a" r="2.5" stroke="#00f0ff" stroke-width="1.5"></circle>`
+  ).join('');
+  const lastPt = pts ? pts[pts.length - 1] : [100, 20];
+
+  card.innerHTML = `
+    <div class="flex justify-between items-start mb-sm">
+      <div>
+        <h2 class="font-headline-sm text-[20px] font-semibold text-on-surface tracking-tight">${{heroName.length > 28 ? heroName.slice(0,28) + '…' : heroName}}</h2>
+        <div class="flex items-center gap-2 mt-1">
+          <span class="inline-block w-1.5 h-1.5 rounded-full bg-secondary animate-pulse shadow-[0_0_8px_rgba(188,255,95,0.6)]"></span>
+          <span class="font-label-xs text-on-surface-variant uppercase tracking-wider">Live Scraping • Croma</span>
+        </div>
+      </div>
+      <div class="bg-surface-container/50 border border-white/5 rounded-full px-2.5 py-1 flex items-center gap-1 shadow-inner">
+        <span class="material-symbols-outlined text-[14px] ${{trendColor}}">${{trendIcon}}</span>
+        <span class="font-data-md text-[13px] ${{trendColor}} font-medium">${{trendText}}</span>
+      </div>
+    </div>
+    <div class="mb-lg">
+      <div class="font-display-lg text-[36px] font-bold text-primary text-glow tracking-tighter leading-none">${{formatRupee(latest.price_value)}}</div>
+      <div class="font-data-md text-[13px] text-on-surface-variant mt-2 leading-snug">${{latest.discount || 'No discount data'}}</div>
+    </div>
+    <div class="h-40 w-full relative flex items-end justify-between px-1">
+      <div class="absolute inset-0 flex flex-col justify-between pointer-events-none">
+        <div class="border-b border-white/[0.03] w-full h-[1px]"></div>
+        <div class="border-b border-white/[0.03] w-full h-[1px]"></div>
+        <div class="border-b border-white/[0.03] w-full h-[1px]"></div>
+        <div class="border-b border-white/[0.03] w-full h-[1px]"></div>
+        <div class="border-b border-white/[0.03] w-full h-[1px]"></div>
+      </div>
+      <svg class="absolute inset-0 h-full w-full pointer-events-none" preserveAspectRatio="none" viewBox="0 0 100 100">
+        <defs>
+          <linearGradient id="chartGradient" x1="0" x2="0" y1="0" y2="1">
+            <stop offset="0%" stop-color="#00f0ff" stop-opacity="0.15"></stop>
+            <stop offset="100%" stop-color="#00f0ff" stop-opacity="0"></stop>
+          </linearGradient>
+        </defs>
+        <path d="${{fill}}" fill="url(#chartGradient)"></path>
+        <path d="${{line}}" fill="none" stroke="#00f0ff" stroke-width="1.5" vector-effect="non-scaling-stroke"></path>
+        ${{dots}}
+        <circle class="animate-pulse" cx="${{lastPt[0]}}" cy="${{lastPt[1]}}" fill="#00f0ff" r="3.5"></circle>
+      </svg>
+      <div class="absolute -bottom-6 w-full flex justify-between font-label-xs text-on-surface-variant opacity-60">
+        ${{shortLabels.map(l => `<span class="${{l === 'Now' ? 'text-primary opacity-100 font-medium' : ''}}">${{l}}</span>`).join('')}}
+      </div>
+    </div>
+  `;
 }}
 
 function populateSelect() {{
@@ -526,9 +373,10 @@ function populateSelect() {{
   Object.keys(productsData).forEach(name => {{
     const opt = document.createElement('option');
     opt.value = name;
-    opt.textContent = name.length > 70 ? name.slice(0, 70) + '…' : name;
+    opt.textContent = name.length > 60 ? name.slice(0, 60) + '…' : name;
     sel.appendChild(opt);
   }});
+  if (heroName) sel.value = heroName;
 }}
 
 function renderChart() {{
@@ -541,40 +389,27 @@ function renderChart() {{
   const ctx = document.getElementById('priceChart').getContext('2d');
   chart = new Chart(ctx, {{
     type: 'line',
-    data: {{
-      labels: labels,
-      datasets: [{{
-        label: 'Price (₹)',
-        data: data,
-        borderColor: '#5EEAD4',
-        backgroundColor: 'rgba(94,234,212,0.10)',
-        borderWidth: 2.5,
-        pointBackgroundColor: '#5EEAD4',
-        pointBorderColor: '#131B2C',
-        pointBorderWidth: 2,
-        pointRadius: 5,
-        pointHoverRadius: 7,
-        tension: 0.35,
-        fill: true
-      }}]
-    }},
+    data: {{ labels, datasets: [{{
+      label: 'Price', data,
+      borderColor: '#00f0ff',
+      backgroundColor: 'rgba(0,240,255,0.10)',
+      borderWidth: 2, pointBackgroundColor: '#00f0ff',
+      pointBorderColor: '#10141a', pointBorderWidth: 2,
+      pointRadius: 5, pointHoverRadius: 7, tension: 0.35, fill: true
+    }}] }},
     options: {{
       responsive: true,
       plugins: {{
         legend: {{ display: false }},
         tooltip: {{
-          backgroundColor: '#131B2C',
-          borderColor: 'rgba(255,255,255,0.1)',
-          borderWidth: 1,
-          titleFont: {{ family: 'JetBrains Mono', size: 11 }},
-          bodyFont: {{ family: 'JetBrains Mono', size: 12 }},
-          padding: 10,
-          callbacks: {{ label: (ctx) => formatRupee(ctx.parsed.y) }}
+          backgroundColor: '#1c2026', borderColor: 'rgba(255,255,255,0.1)', borderWidth: 1,
+          titleFont: {{ family: 'JetBrains Mono', size: 11 }}, bodyFont: {{ family: 'JetBrains Mono', size: 12 }},
+          padding: 10, callbacks: {{ label: (c) => formatRupee(c.parsed.y) }}
         }}
       }},
       scales: {{
-        x: {{ ticks: {{ color: '#8A93A6', font: {{ family: 'JetBrains Mono', size: 10 }} }}, grid: {{ color: 'rgba(255,255,255,0.05)' }} }},
-        y: {{ ticks: {{ color: '#8A93A6', font: {{ family: 'JetBrains Mono', size: 10 }}, callback: v => formatRupee(v) }}, grid: {{ color: 'rgba(255,255,255,0.05)' }} }}
+        x: {{ ticks: {{ color: '#8a9696', font: {{ family: 'JetBrains Mono', size: 9 }} }}, grid: {{ color: 'rgba(255,255,255,0.04)' }} }},
+        y: {{ ticks: {{ color: '#8a9696', font: {{ family: 'JetBrains Mono', size: 9 }}, callback: v => formatRupee(v) }}, grid: {{ color: 'rgba(255,255,255,0.04)' }} }}
       }}
     }}
   }});
@@ -583,64 +418,53 @@ function renderChart() {{
 function renderSnapshot() {{
   const grid = document.getElementById('snapshotGrid');
   const entries = Object.entries(productsData);
-
   if (entries.length === 0) {{
-    grid.innerHTML = '<div class="empty glass" style="grid-column: 1/-1;">No data yet. Run pipeline.py to collect your first scrape.</div>';
+    grid.innerHTML = '<div class="text-on-surface-variant font-label-xs text-center py-10">No data yet.</div>';
     return;
   }}
-
-  const cards = entries.map(([name, rows]) => {{
+  grid.innerHTML = entries.map(([name, rows]) => {{
     const latest = rows[rows.length - 1];
     const prev = rows.length > 1 ? rows[rows.length - 2] : null;
-
-    let trendHtml = '<span class="trend flat">—</span>';
+    let trendHtml = '<span class="text-on-surface-variant font-label-xs">—</span>';
     if (prev) {{
       const diff = latest.price_value - prev.price_value;
-      if (diff > 0) trendHtml = `<span class="trend up">▲ ${{formatRupee(Math.abs(diff))}}</span>`;
-      else if (diff < 0) trendHtml = `<span class="trend down">▼ ${{formatRupee(Math.abs(diff))}}</span>`;
+      if (diff > 0) trendHtml = `<span class="text-error font-data-md text-[12px]">▲ ${{formatRupee(Math.abs(diff))}}</span>`;
+      else if (diff < 0) trendHtml = `<span class="text-secondary font-data-md text-[12px]">▼ ${{formatRupee(Math.abs(diff))}}</span>`;
     }}
-
-    const discountPct = extractDiscountPercent(latest.discount);
-    const barWidth = Math.min(discountPct, 100);
-
     return `
-      <div class="product-card glass">
-        <div class="name">${{name}}</div>
-        <div class="price-row">
-          <span class="price">${{formatRupee(latest.price_value)}}</span>
+      <div class="product-card glass-panel rounded-2xl p-4">
+        <div class="text-[13px] font-medium text-on-surface leading-snug mb-2">${{name}}</div>
+        <div class="flex items-baseline justify-between mb-2">
+          <span class="font-data-lg text-[19px] text-primary">${{formatRupee(latest.price_value)}}</span>
           ${{trendHtml}}
         </div>
-        <div class="discount-bar-wrap">
-          <div class="discount-bar-track"><div class="discount-bar-fill" style="width:${{barWidth}}%"></div></div>
-          <div class="discount-label">${{latest.discount || 'No discount'}}</div>
-        </div>
-        <div class="meta-row">
-          <span class="stock-tag">${{latest.stock_availability || '—'}}</span>
+        <div class="flex items-center justify-between">
+          <span class="font-label-xs text-on-surface-variant/70">${{latest.discount || 'No discount'}}</span>
+          <span class="font-label-xs text-on-surface-variant/50 uppercase">${{latest.stock_availability || '—'}}</span>
         </div>
       </div>
     `;
   }}).join('');
-
-  grid.innerHTML = cards;
 }}
 
 function renderHealth() {{
-  const container = document.getElementById('healthLog');
+  const log = document.getElementById('healthLog');
   if (healthData.length === 0) {{
-    container.innerHTML = '<div class="empty">No health log entries yet.</div>';
+    log.innerHTML = '<div class="text-on-surface-variant font-label-xs text-center py-10">No health log entries yet.</div>';
     return;
   }}
-  container.innerHTML = healthData.map(h => `
-    <div class="log-entry">
-      <span class="log-status ${{h.status}}">${{h.status.toUpperCase()}}</span>
-      <span class="log-time">${{h.run_at.slice(0, 19).replace('T', ' ')}}</span>
-      <span class="log-details">${{h.details || ''}}</span>
+  const colorFor = (s) => s === 'success' ? 'text-primary' : (s === 'failed' ? 'text-error' : 'text-secondary');
+  log.innerHTML = healthData.map(h => `
+    <div class="log-row flex items-center gap-3 px-4 py-3 font-data-md text-[11px]">
+      <span class="${{colorFor(h.status)}} font-semibold w-16 flex-shrink-0">${{h.status.toUpperCase()}}</span>
+      <span class="text-on-surface-variant w-36 flex-shrink-0">${{h.run_at.slice(0,19).replace('T',' ')}}</span>
+      <span class="text-on-surface-variant/70 flex-1 truncate">${{h.details || ''}}</span>
     </div>
   `).join('');
 }}
 
+renderHero();
 populateSelect();
-try {{ renderChart(); }} catch (e) {{ console.error('Chart failed to render:', e); }}
 renderSnapshot();
 renderHealth();
 </script>
