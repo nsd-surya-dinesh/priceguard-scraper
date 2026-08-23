@@ -2,409 +2,492 @@
 <html class="dark" lang="en">
 <head>
 <meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
-<title>PriceGuard — Self-Healing Scraper</title>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>PriceGuard Dashboard</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%2310141a'/%3E%3Cpath d='M50 15 L80 28 L80 52 C80 72 68 85 50 90 C32 85 20 72 20 52 L20 28 Z' fill='none' stroke='%2300f0ff' stroke-width='6'/%3E%3Cpath d='M38 50 L47 60 L64 40' fill='none' stroke='%2300f0ff' stroke-width='6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;600;700&family=JetBrains+Mono:wght@400;500;700&family=Hanken+Grotesk:wght@400;500&display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Hanken+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
-<style>
-    @font-face {
-        font-family: 'Geist';
-        src: local('Helvetica Neue'), local('Arial'), sans-serif;
-    }
-
-    body {
-        background-color: #05070A;
-        color: #dfe2eb;
-        -webkit-font-smoothing: antialiased;
-        -moz-osx-font-smoothing: grayscale;
-        min-height: max(884px, 100dvh);
-    }
-
-    .glass-panel {
-        background: rgba(18, 24, 31, 0.4);
-        backdrop-filter: blur(24px);
-        -webkit-backdrop-filter: blur(24px);
-        border: 1px solid rgba(255, 255, 255, 0.05);
-        box-shadow: inset 0 1px 0 rgba(255,255,255,0.1), 0 8px 32px rgba(0,0,0,0.4);
-    }
-
-    .glass-nav {
-        background: rgba(10, 14, 20, 0.75);
-        backdrop-filter: blur(32px);
-        -webkit-backdrop-filter: blur(32px);
-        border-top: 1px solid rgba(255, 255, 255, 0.08);
-        box-shadow: 0 -4px 24px rgba(0,0,0,0.5);
-    }
-
-    .text-glow { text-shadow: 0 0 12px rgba(0, 240, 255, 0.3); }
-
-    ::-webkit-scrollbar { display: none; }
-
-    .app-shell { max-width: 480px; margin: 0 auto; }
-
-    .tab-panel { display: none; }
-    .tab-panel.active { display: block; }
-
-    .nav-link.active { color: #00f0ff; }
-    .nav-link { color: rgba(223,226,235,0.55); }
-
-    .product-card {
-        transition: border-color 0.15s ease, transform 0.15s ease;
-    }
-    .product-card:hover {
-        border-color: rgba(0,240,255,0.4);
-        transform: translateY(-2px);
-    }
-
-    .log-row { border-bottom: 1px solid rgba(255,255,255,0.05); }
-    .log-row:last-child { border-bottom: none; }
-</style>
 <script id="tailwind-config">
-    tailwind.config = {
-        darkMode: "class",
-        theme: {
-            extend: {
-                colors: {
-                    primary: "#00f0ff",
-                    "on-primary": "#00363a",
-                    secondary: "#bcff5f",
-                    "on-secondary": "#203600",
-                    error: "#ffb4ab",
-                    background: "#10141a",
-                    "on-background": "#dfe2eb",
-                    surface: "#10141a",
-                    "surface-container": "#1c2026",
-                    "surface-container-low": "#181c22",
-                    "surface-container-high": "#262a31",
-                    "on-surface": "#dfe2eb",
-                    "on-surface-variant": "#8a9696",
-                },
-                spacing: { xl: "32px", lg: "24px", gutter: "16px", xs: "8px", sm: "12px", base: "4px", margin: "16px", md: "16px" },
-                fontFamily: {
-                    "headline-md": ["Geist"], "headline-sm": ["Geist"],
-                    "display-lg": ["Geist"], "data-lg": ["Geist", "sans-serif"],
-                    "data-md": ["Geist", "sans-serif"],
-                    "label-xs": ["Inter", "sans-serif"],
-                    "body-lg": ["Inter", "sans-serif"], "body-md": ["Inter", "sans-serif"],
-                },
-            },
-        },
-    }
-</script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary-fixed": "#7df4ff",
+                        "inverse-primary": "#006970",
+                        "error-container": "#93000a",
+                        "on-secondary-container": "#3d6200",
+                        "tertiary": "#fff3f2",
+                        "surface-container": "#1c2026",
+                        "on-surface": "#dfe2eb",
+                        "on-secondary": "#203600",
+                        "on-secondary-fixed": "#112000",
+                        "outline": "#849495",
+                        "tertiary-fixed": "#ffdad7",
+                        "surface-container-low": "#181c22",
+                        "tertiary-container": "#ffceca",
+                        "secondary": "#bcff5f",
+                        "secondary-container": "#95e400",
+                        "on-tertiary": "#68000b",
+                        "primary": "#dbfcff",
+                        "secondary-fixed": "#a8f928",
+                        "on-background": "#dfe2eb",
+                        "on-surface-variant": "#b9cacb",
+                        "on-primary": "#00363a",
+                        "outline-variant": "#3b494b",
+                        "error": "#ffb4ab",
+                        "primary-container": "#00f0ff",
+                        "on-primary-fixed": "#002022",
+                        "on-tertiary-fixed": "#410004",
+                        "on-error": "#690005",
+                        "surface-tint": "#00dbe9",
+                        "surface-container-highest": "#31353c",
+                        "primary-fixed-dim": "#00dbe9",
+                        "on-primary-fixed-variant": "#004f54",
+                        "tertiary-fixed-dim": "#ffb3ae",
+                        "on-tertiary-fixed-variant": "#930014",
+                        "inverse-surface": "#dfe2eb",
+                        "secondary-fixed-dim": "#8fdb00",
+                        "surface-container-high": "#262a31",
+                        "surface-bright": "#353940",
+                        "surface-container-lowest": "#0a0e14",
+                        "on-error-container": "#ffdad6",
+                        "on-primary-container": "#006970",
+                        "background": "#10141a",
+                        "surface-dim": "#10141a",
+                        "on-tertiary-container": "#bb1824",
+                        "on-secondary-fixed-variant": "#314f00",
+                        "surface-variant": "#31353c",
+                        "inverse-on-surface": "#2d3137",
+                        "surface": "#10141a"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "base": "4px",
+                        "xs": "8px",
+                        "margin": "20px",
+                        "sm": "12px",
+                        "lg": "24px",
+                        "xl": "32px",
+                        "gutter": "16px",
+                        "md": "16px"
+                    },
+                    "fontFamily": {
+                        "headline-sm": ["Geist"],
+                        "body-lg": ["Hanken Grotesk"],
+                        "label-xs": ["JetBrains Mono"],
+                        "data-md": ["JetBrains Mono"],
+                        "body-md": ["Hanken Grotesk"],
+                        "display-lg": ["Geist"],
+                        "data-lg": ["JetBrains Mono"],
+                        "headline-md": ["Geist"]
+                    },
+                    "fontSize": {
+                        "headline-sm": ["20px", { "lineHeight": "28px", "fontWeight": "600" }],
+                        "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "label-xs": ["10px", { "lineHeight": "12px", "fontWeight": "700" }],
+                        "data-md": ["14px", { "lineHeight": "18px", "fontWeight": "500" }],
+                        "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "display-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "data-lg": ["20px", { "lineHeight": "24px", "letterSpacing": "0.05em", "fontWeight": "700" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body {
+            background-color: #10141a;
+            color: #dfe2eb;
+        }
+
+        .clean-card {
+            background-color: #1c2026;
+            border: 1px solid #3b494b;
+            border-radius: 0.5rem;
+        }
+
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #10141a; }
+        ::-webkit-scrollbar-thumb { background: #3b494b; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #849495; }
+
+        .page { display: none; }
+        .page.active { display: block; }
+
+        .nav-link.active {
+            background-color: #262a31;
+            color: #dfe2eb;
+            border: 1px solid #3b494b;
+        }
+        .nav-link:not(.active) { color: #b9cacb; }
+        .nav-link:not(.active):hover { color: #dfe2eb; background-color: #1c2026; }
+
+        .log-row { border-bottom: 1px solid #3b494b; }
+        .log-row:last-child { border-bottom: none; }
+
+        .product-row { transition: border-color 0.15s ease; }
+        .product-row:hover { border-color: #00dbe9; }
+
+        /* Mobile: hide desktop sidebar, show a simple top bar with a select-based nav */
+        @media (max-width: 767px) {
+            .mobile-nav-select { display: block; }
+        }
+        @media (min-width: 768px) {
+            .mobile-nav-select { display: none; }
+        }
+    </style>
 </head>
-<body class="relative min-h-screen w-full flex flex-col font-body-md">
+<body class="font-body-lg antialiased min-h-screen flex relative overflow-hidden bg-background">
 
-<div class="app-shell relative flex flex-col min-h-screen">
-
-<div class="fixed inset-0 z-0 pointer-events-none opacity-20" style="max-width:480px; margin:0 auto; background: radial-gradient(circle at top right, rgba(0, 240, 255, 0.08) 0%, transparent 50%), radial-gradient(circle at bottom left, rgba(149, 228, 0, 0.05) 0%, transparent 40%);"></div>
-
-<main class="flex-1 overflow-y-auto z-10 pb-28">
-
-  <header class="px-margin pt-xl pb-md flex items-center justify-between">
+<!-- Side Navigation Shell (desktop) -->
+<nav class="hidden md:flex flex-col w-64 bg-surface-container-lowest border-r border-outline-variant z-10 h-screen py-lg shrink-0">
+  <div class="px-lg pb-xl border-b border-outline-variant flex items-center gap-xs">
+    <span class="material-symbols-outlined text-primary-container text-display-lg">sensors</span>
     <div>
-      <h1 class="font-display-lg text-[28px] font-bold text-on-surface tracking-tight">PriceGuard</h1>
-      <p class="font-label-xs text-on-surface-variant/60 uppercase tracking-widest mt-1">Self-healing scraper</p>
+      <h1 class="font-headline-md text-headline-md font-bold tracking-tighter text-on-surface">PriceGuard</h1>
+      <p class="font-label-xs text-label-xs text-on-surface-variant tracking-widest uppercase">Dashboard</p>
     </div>
-    <span class="text-[10px] font-label-xs text-on-surface-variant text-right leading-tight">LAST SYNC<br><span class="text-primary/80">2026-08-22 11:47</span></span>
-  </header>
-
-  <!-- ===================== TAB: CURRENT ===================== -->
-  <div id="tab-current" class="tab-panel active">
-
-    <section class="px-margin mb-lg">
-      <div class="grid grid-cols-2 gap-xs">
-        <div class="glass-panel rounded-2xl p-sm flex flex-col justify-between h-20 relative overflow-hidden">
-          <span class="font-label-xs text-on-surface-variant z-10 opacity-80 uppercase tracking-wider">Products Tracked</span>
-          <div class="font-data-lg text-on-surface z-10 text-[20px]">3</div>
-        </div>
-        <div class="glass-panel rounded-2xl p-sm flex flex-col justify-between h-20 relative overflow-hidden">
-          <span class="font-label-xs text-on-surface-variant z-10 opacity-80 uppercase tracking-wider">Total Runs</span>
-          <div class="font-data-lg text-secondary z-10 text-[20px]">6</div>
-        </div>
-        <div class="glass-panel rounded-2xl p-sm flex flex-col justify-between h-20 relative overflow-hidden">
-          <span class="font-label-xs text-on-surface-variant z-10 opacity-80 uppercase tracking-wider">Successful</span>
-          <div class="font-data-lg text-on-surface z-10 text-[20px]">100.0%</div>
-        </div>
-        <div class="glass-panel rounded-2xl p-sm flex flex-col justify-between h-20 relative overflow-hidden">
-          <span class="font-label-xs text-on-surface-variant z-10 opacity-80 uppercase tracking-wider">Failed</span>
-          <div class="font-data-lg text-error z-10 text-[20px]">0.0%</div>
-        </div>
-      </div>
-    </section>
-
-    <section class="px-margin mb-xl">
-      <div class="glass-panel rounded-3xl p-md relative border-white/10" id="heroCard">
-        <!-- filled by JS -->
-      </div>
-    </section>
-
   </div>
-
-  <!-- ===================== TAB: HISTORY ===================== -->
-  <div id="tab-history" class="tab-panel">
-    <section class="px-margin mb-lg">
-      <h2 class="font-headline-sm text-[18px] font-semibold text-on-surface mb-3">Price History</h2>
-      <select id="productSelect" onchange="renderChart()" class="w-full bg-surface-container-low border border-white/10 text-on-surface text-[13px] rounded-xl px-3 py-2.5 mb-4"></select>
-      <div class="glass-panel rounded-3xl p-md">
-        <canvas id="priceChart" height="200"></canvas>
-      </div>
-    </section>
+  <div class="flex-1 overflow-y-auto px-md flex flex-col gap-sm py-md">
+    <a class="nav-link active flex items-center gap-md px-4 py-3 rounded-lg transition-colors" href="javascript:void(0)" onclick="showPage('overview', this)">
+      <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">monitoring</span>
+      <span class="font-data-md text-data-md">Dashboard</span>
+    </a>
+    <a class="nav-link flex items-center gap-md px-4 py-3 rounded-lg transition-colors" href="javascript:void(0)" onclick="showPage('history', this)">
+      <span class="material-symbols-outlined">timeline</span>
+      <span class="font-data-md text-data-md">History</span>
+    </a>
+    <a class="nav-link flex items-center gap-md px-4 py-3 rounded-lg transition-colors" href="javascript:void(0)" onclick="showPage('logs', this)">
+      <span class="material-symbols-outlined">terminal</span>
+      <span class="font-data-md text-data-md">Logs</span>
+    </a>
+    <a class="nav-link flex items-center gap-md px-4 py-3 rounded-lg transition-colors" href="javascript:void(0)" onclick="showPage('snapshots', this)">
+      <span class="material-symbols-outlined">insert_chart</span>
+      <span class="font-data-md text-data-md">Snapshots</span>
+    </a>
   </div>
-
-  <!-- ===================== TAB: LOGS ===================== -->
-  <div id="tab-logs" class="tab-panel">
-    <section class="px-margin mb-lg">
-      <h2 class="font-headline-sm text-[18px] font-semibold text-on-surface mb-3">Scraper Health Log</h2>
-      <div class="glass-panel rounded-3xl overflow-hidden" id="healthLog"></div>
-    </section>
+  <div class="px-md mt-auto pt-lg border-t border-outline-variant">
+    <button onclick="location.reload()" class="w-full py-2 bg-surface-container border border-outline-variant text-on-surface font-data-md text-data-md rounded-lg hover:bg-surface-variant transition-colors flex items-center justify-center gap-xs">
+      <span class="material-symbols-outlined text-[18px]">sync</span>
+      RE-SYNC ALL
+    </button>
   </div>
-
-  <!-- ===================== TAB: SNAPSHOT ===================== -->
-  <div id="tab-snapshot" class="tab-panel">
-    <section class="px-margin mb-lg">
-      <h2 class="font-headline-sm text-[18px] font-semibold text-on-surface mb-3">Current Snapshot</h2>
-      <div class="flex flex-col gap-3" id="snapshotGrid"></div>
-    </section>
-  </div>
-
-</main>
-
-<nav class="fixed bottom-0 w-full z-50 rounded-t-2xl glass-nav flex justify-around items-center px-2 py-2 pb-8 pt-4" style="max-width:480px; left:50%; transform:translateX(-50%);">
-  <a class="nav-link active flex flex-col items-center justify-center transition-all duration-150" href="javascript:void(0)" onclick="showTab('current', this)">
-    <span class="material-symbols-outlined mb-1 text-[24px]" style="font-variation-settings: 'FILL' 1;">monitoring</span>
-    <span class="font-label-xs font-semibold">Current</span>
-  </a>
-  <a class="nav-link flex flex-col items-center justify-center transition-all" href="javascript:void(0)" onclick="showTab('history', this)">
-    <span class="material-symbols-outlined mb-1 text-[24px]">timeline</span>
-    <span class="font-label-xs">History</span>
-  </a>
-  <a class="nav-link flex flex-col items-center justify-center transition-all" href="javascript:void(0)" onclick="showTab('logs', this)">
-    <span class="material-symbols-outlined mb-1 text-[24px]">terminal</span>
-    <span class="font-label-xs">Logs</span>
-  </a>
-  <a class="nav-link flex flex-col items-center justify-center transition-all" href="javascript:void(0)" onclick="showTab('snapshot', this)">
-    <span class="material-symbols-outlined mb-1 text-[24px]">insert_chart</span>
-    <span class="font-label-xs">Snapshot</span>
-  </a>
 </nav>
 
-</div>
+<!-- Main Content Area -->
+<main class="flex-1 min-h-screen overflow-y-auto relative z-10 px-xl pt-lg pb-xl bg-background">
 
-<script>
-const productsData = {"Asus TUF A15 AMD Ryzen 7 170 Gaming Laptop (16GB, 512GB SSD, Windows 11 Home, 4GB Graphics, 15.6 inch 144 Hz Full HD IPS Display, NVIDIA GeForce RTX 3050, MS Office Home 2024, Graphite Black, 2.30 KG)": [{"id": 1, "product_name": "Asus Tuf A15 Amd Ryzen 7 170 Gaming Laptop 16Gb 512Gb Ssd Windows 11 Home 4Gb Graphics 15 6 Inch 144 Hz Full Hd Ips Display Nvidia Geforce Rtx 3050 Ms Office Home 2024 Graphite Black 2 30 Kg ", "price_value": 77990.0, "currency": "INR", "discount": "Save ₹54,000 (40.91% off)", "stock_availability": "Not Available for your pincode", "product_url": "https://www.croma.com/asus-tuf-a15-amd-ryzen-7-170-gaming-laptop-16gb-512gb-ssd-windows-11-home-4gb-graphics-15-6-inch-144-hz-full-hd-ips-display-nvidia-geforce-rtx-3050-ms-office-home-2024-graphite-black-2-30-kg-/p/322265", "scraped_at": "2026-08-19T13:15:41.744072"}, {"id": 4, "product_name": "Asus TUF A15 AMD Ryzen 7 170 Gaming Laptop (16GB, 512GB SSD, Windows 11 Home, 4GB Graphics, 15.6 inch 144 Hz Full HD IPS Display, NVIDIA GeForce RTX 3050, MS Office Home 2024, Graphite Black, 2.30 KG)", "price_value": 77990.0, "currency": "INR", "discount": "Save ₹54,000 (40.91% off)", "stock_availability": "Not Available for your pincode", "product_url": "https://www.croma.com/asus-tuf-a15-amd-ryzen-7-170-gaming-laptop-16gb-512gb-ssd-windows-11-home-4gb-graphics-15-6-inch-144-hz-full-hd-ips-display-nvidia-geforce-rtx-3050-ms-office-home-2024-graphite-black-2-30-kg-/p/322265", "scraped_at": "2026-08-21T19:42:02.395602"}, {"id": 9, "product_name": "Asus TUF A15 AMD Ryzen 7 170 Gaming Laptop (16GB, 512GB SSD, Windows 11 Home, 4GB Graphics, 15.6 inch 144 Hz Full HD IPS Display, NVIDIA GeForce RTX 3050, MS Office Home 2024, Graphite Black, 2.30 KG)", "price_value": 77990.0, "currency": "INR", "discount": "Save ₹54,000 (40.91% off)", "stock_availability": "Not Available for your pincode", "product_url": "https://www.croma.com/asus-tuf-a15-amd-ryzen-7-170-gaming-laptop-16gb-512gb-ssd-windows-11-home-4gb-graphics-15-6-inch-144-hz-full-hd-ips-display-nvidia-geforce-rtx-3050-ms-office-home-2024-graphite-black-2-30-kg-/p/322265", "scraped_at": "2026-08-21T19:43:39.834918"}, {"id": 10, "product_name": "Asus Tuf A15 Amd Ryzen 7 170 Gaming Laptop 16Gb 512Gb Ssd Windows 11 Home 4Gb Graphics 15 6 Inch 144 Hz Full Hd Ips Display Nvidia Geforce Rtx 3050 Ms Office Home 2024 Graphite Black 2 30 Kg ", "price_value": 77990.0, "currency": "INR", "discount": "Save ₹54,000 (40.91% off)", "stock_availability": "Not Available for your pincode", "product_url": "https://www.croma.com/asus-tuf-a15-amd-ryzen-7-170-gaming-laptop-16gb-512gb-ssd-windows-11-home-4gb-graphics-15-6-inch-144-hz-full-hd-ips-display-nvidia-geforce-rtx-3050-ms-office-home-2024-graphite-black-2-30-kg-/p/322265", "scraped_at": "2026-08-21T19:44:38.081774"}, {"id": 15, "product_name": "Asus Tuf A15 Amd Ryzen 7 170 Gaming Laptop 16Gb 512Gb Ssd Windows 11 Home 4Gb Graphics 15 6 Inch 144 Hz Full Hd Ips Display Nvidia Geforce Rtx 3050 Ms Office Home 2024 Graphite Black 2 30 Kg ", "price_value": 77990.0, "currency": "INR", "discount": "Save ₹54,000 (40.91% off)", "stock_availability": "Not Available for your pincode", "product_url": "https://www.croma.com/asus-tuf-a15-amd-ryzen-7-170-gaming-laptop-16gb-512gb-ssd-windows-11-home-4gb-graphics-15-6-inch-144-hz-full-hd-ips-display-nvidia-geforce-rtx-3050-ms-office-home-2024-graphite-black-2-30-kg-/p/322265", "scraped_at": "2026-08-22T11:42:13.815839"}, {"id": 18, "product_name": "Asus Tuf A15 Amd Ryzen 7 170 Gaming Laptop 16Gb 512Gb Ssd Windows 11 Home 4Gb Graphics 15 6 Inch 144 Hz Full Hd Ips Display Nvidia Geforce Rtx 3050 Ms Office Home 2024 Graphite Black 2 30 Kg ", "price_value": 77990.0, "currency": "INR", "discount": "Save ₹54,000 (40.91% off)", "stock_availability": "Not Available for your pincode", "product_url": "https://www.croma.com/asus-tuf-a15-amd-ryzen-7-170-gaming-laptop-16gb-512gb-ssd-windows-11-home-4gb-graphics-15-6-inch-144-hz-full-hd-ips-display-nvidia-geforce-rtx-3050-ms-office-home-2024-graphite-black-2-30-kg-/p/322265", "scraped_at": "2026-08-22T11:47:30.746125"}], "ASUS Vivobook 16 Snapdragon X X1 26 100 Thin & Light Laptop (16GB, 512GB SSD, Windows 11 Home, 16 inch WUXGA Display, MS Office Home 2024, Cool Silver, 1.88 KG)": [{"id": 2, "product_name": "ASUS Vivobook 16 Snapdragon X X1 26 100 Thin & Light Laptop (16GB, 512GB SSD, Windows 11 Home, 16 inch WUXGA Display, MS Office Home 2024, Cool Silver, 1.88 KG)", "price_value": 64990.0, "currency": "INR", "discount": "Save ₹20,000 (23.53% off)", "stock_availability": "Not Available for your pincode", "product_url": "https://www.croma.com/asus-vivobook-16-snapdragon-x-x1-26-100-thin-light-laptop-16gb-512gb-ssd-windows-11-home-16-inch-wuxga-display-ms-office-home-2024-cool-silver-1-88-kg-/p/314355", "scraped_at": "2026-08-19T13:15:41.744072"}, {"id": 5, "product_name": "Asus Vivobook 16 Snapdragon X X1 26 100 Thin Light Laptop 16Gb 512Gb Ssd Windows 11 Home 16 Inch Wuxga Display Ms Office Home 2024 Cool Silver 1 88 Kg ", "price_value": 64990.0, "currency": "INR", "discount": "Save ₹20,000 (23.53% off)", "stock_availability": "Not Available for your pincode", "product_url": "https://www.croma.com/asus-vivobook-16-snapdragon-x-x1-26-100-thin-light-laptop-16gb-512gb-ssd-windows-11-home-16-inch-wuxga-display-ms-office-home-2024-cool-silver-1-88-kg-/p/314355", "scraped_at": "2026-08-21T19:42:02.395602"}, {"id": 8, "product_name": "Asus Vivobook 16 Snapdragon X X1 26 100 Thin Light Laptop 16Gb 512Gb Ssd Windows 11 Home 16 Inch Wuxga Display Ms Office Home 2024 Cool Silver 1 88 Kg ", "price_value": 64990.0, "currency": "INR", "discount": "Save ₹20,000 (23.53% off)", "stock_availability": "Not Available for your pincode", "product_url": "https://www.croma.com/asus-vivobook-16-snapdragon-x-x1-26-100-thin-light-laptop-16gb-512gb-ssd-windows-11-home-16-inch-wuxga-display-ms-office-home-2024-cool-silver-1-88-kg-/p/314355", "scraped_at": "2026-08-21T19:43:39.834918"}, {"id": 11, "product_name": "ASUS Vivobook 16 Snapdragon X X1 26 100 Thin & Light Laptop (16GB, 512GB SSD, Windows 11 Home, 16 inch WUXGA Display, MS Office Home 2024, Cool Silver, 1.88 KG)", "price_value": 64990.0, "currency": "INR", "discount": "Save ₹20,000 (23.53% off)", "stock_availability": "Not Available for your pincode", "product_url": "https://www.croma.com/asus-vivobook-16-snapdragon-x-x1-26-100-thin-light-laptop-16gb-512gb-ssd-windows-11-home-16-inch-wuxga-display-ms-office-home-2024-cool-silver-1-88-kg-/p/314355", "scraped_at": "2026-08-21T19:44:38.081774"}, {"id": 13, "product_name": "ASUS Vivobook 16 Snapdragon X X1 26 100 Thin & Light Laptop (16GB, 512GB SSD, Windows 11 Home, 16 inch WUXGA Display, MS Office Home 2024, Cool Silver, 1.88 KG)", "price_value": 64990.0, "currency": "INR", "discount": "Save ₹20,000 (23.53% off)", "stock_availability": "Not Available for your pincode", "product_url": "https://www.croma.com/asus-vivobook-16-snapdragon-x-x1-26-100-thin-light-laptop-16gb-512gb-ssd-windows-11-home-16-inch-wuxga-display-ms-office-home-2024-cool-silver-1-88-kg-/p/314355", "scraped_at": "2026-08-22T11:42:13.815839"}, {"id": 16, "product_name": "Asus Vivobook 16 Snapdragon X X1 26 100 Thin Light Laptop 16Gb 512Gb Ssd Windows 11 Home 16 Inch Wuxga Display Ms Office Home 2024 Cool Silver 1 88 Kg ", "price_value": 64990.0, "currency": "INR", "discount": "Save ₹20,000 (23.53% off)", "stock_availability": "Not Available for your pincode", "product_url": "https://www.croma.com/asus-vivobook-16-snapdragon-x-x1-26-100-thin-light-laptop-16gb-512gb-ssd-windows-11-home-16-inch-wuxga-display-ms-office-home-2024-cool-silver-1-88-kg-/p/314355", "scraped_at": "2026-08-22T11:47:30.746125"}], "Lenovo LOQ 15IRX9 Intel Core i5 13th Generation Gaming Laptop (16GB, 512GB SSD, Windows 11 Home, 6GB Graphics, 15.6 Inch 144 Hz Full HD IPS Display , NVIDIA GeForce RTX 3050, MS Office Home 2024, Luna Grey, 2.38 KG": [{"id": 3, "product_name": "Lenovo LOQ 15IRX9 Intel Core i5 13th Generation Gaming Laptop (16GB, 512GB SSD, Windows 11 Home, 6GB Graphics, 15.6 Inch 144 Hz Full HD IPS Display , NVIDIA GeForce RTX 3050, MS Office Home 2024, Luna Grey, 2.38 KG", "price_value": 102990.0, "currency": "INR", "discount": "Save ₹14,500 (12.34% off)", "stock_availability": "Not Available for your pincode", "product_url": "https://www.croma.com/lenovo-loq-15irx9-intel-core-i5-13th-generation-gaming-laptop-16gb-512gb-ssd-windows-11-home-6gb-graphics-15-6-inch-144-hz-full-hd-ips-display-nvidia-geforce-rtx-3050-ms-office-home-2024-luna-grey-2-38-kg/p/316655", "scraped_at": "2026-08-19T13:15:41.744072"}, {"id": 6, "product_name": "Lenovo LOQ 15IRX9 Intel Core i5 13th Generation Gaming Laptop (16GB, 512GB SSD, Windows 11 Home, 6GB Graphics, 15.6 Inch 144 Hz Full HD IPS Display , NVIDIA GeForce RTX 3050, MS Office Home 2024, Luna Grey, 2.38 KG", "price_value": 102990.0, "currency": "INR", "discount": "Save ₹14,500 (12.34% off)", "stock_availability": "Not Available for your pincode", "product_url": "https://www.croma.com/lenovo-loq-15irx9-intel-core-i5-13th-generation-gaming-laptop-16gb-512gb-ssd-windows-11-home-6gb-graphics-15-6-inch-144-hz-full-hd-ips-display-nvidia-geforce-rtx-3050-ms-office-home-2024-luna-grey-2-38-kg/p/316655", "scraped_at": "2026-08-21T19:42:02.395602"}, {"id": 7, "product_name": "Lenovo Loq 15Irx9 Intel Core I5 13Th Generation Gaming Laptop 16Gb 512Gb Ssd Windows 11 Home 6Gb Graphics 15 6 Inch 144 Hz Full Hd Ips Display Nvidia Geforce Rtx 3050 Ms Office Home 2024 Luna Grey 2 38 Kg", "price_value": 102990.0, "currency": "INR", "discount": "Save ₹14,500 (12.34% off)", "stock_availability": "Not Available for your pincode", "product_url": "https://www.croma.com/lenovo-loq-15irx9-intel-core-i5-13th-generation-gaming-laptop-16gb-512gb-ssd-windows-11-home-6gb-graphics-15-6-inch-144-hz-full-hd-ips-display-nvidia-geforce-rtx-3050-ms-office-home-2024-luna-grey-2-38-kg/p/316655", "scraped_at": "2026-08-21T19:43:39.834918"}, {"id": 12, "product_name": "Lenovo Loq 15Irx9 Intel Core I5 13Th Generation Gaming Laptop 16Gb 512Gb Ssd Windows 11 Home 6Gb Graphics 15 6 Inch 144 Hz Full Hd Ips Display Nvidia Geforce Rtx 3050 Ms Office Home 2024 Luna Grey 2 38 Kg", "price_value": 102990.0, "currency": "INR", "discount": "Save ₹14,500 (12.34% off)", "stock_availability": "Not Available for your pincode", "product_url": "https://www.croma.com/lenovo-loq-15irx9-intel-core-i5-13th-generation-gaming-laptop-16gb-512gb-ssd-windows-11-home-6gb-graphics-15-6-inch-144-hz-full-hd-ips-display-nvidia-geforce-rtx-3050-ms-office-home-2024-luna-grey-2-38-kg/p/316655", "scraped_at": "2026-08-21T19:44:38.081774"}, {"id": 14, "product_name": "Lenovo LOQ 15IRX9 Intel Core i5 13th Generation Gaming Laptop (16GB, 512GB SSD, Windows 11 Home, 6GB Graphics, 15.6 Inch 144 Hz Full HD IPS Display , NVIDIA GeForce RTX 3050, MS Office Home 2024, Luna Grey, 2.38 KG", "price_value": 102990.0, "currency": "INR", "discount": "Save ₹14,500 (12.34% off)", "stock_availability": "Not Available for your pincode", "product_url": "https://www.croma.com/lenovo-loq-15irx9-intel-core-i5-13th-generation-gaming-laptop-16gb-512gb-ssd-windows-11-home-6gb-graphics-15-6-inch-144-hz-full-hd-ips-display-nvidia-geforce-rtx-3050-ms-office-home-2024-luna-grey-2-38-kg/p/316655", "scraped_at": "2026-08-22T11:42:13.815839"}, {"id": 17, "product_name": "Lenovo Loq 15Irx9 Intel Core I5 13Th Generation Gaming Laptop 16Gb 512Gb Ssd Windows 11 Home 6Gb Graphics 15 6 Inch 144 Hz Full Hd Ips Display Nvidia Geforce Rtx 3050 Ms Office Home 2024 Luna Grey 2 38 Kg", "price_value": 102990.0, "currency": "INR", "discount": "Save ₹14,500 (12.34% off)", "stock_availability": "Not Available for your pincode", "product_url": "https://www.croma.com/lenovo-loq-15irx9-intel-core-i5-13th-generation-gaming-laptop-16gb-512gb-ssd-windows-11-home-6gb-graphics-15-6-inch-144-hz-full-hd-ips-display-nvidia-geforce-rtx-3050-ms-office-home-2024-luna-grey-2-38-kg/p/316655", "scraped_at": "2026-08-22T11:47:30.746125"}]};
-const healthData = [{"id": 6, "run_at": "2026-08-22T11:47:30.760524", "status": "success", "details": "3 products saved"}, {"id": 5, "run_at": "2026-08-22T11:42:13.838868", "status": "success", "details": "3 products saved"}, {"id": 4, "run_at": "2026-08-21T19:44:38.098419", "status": "success", "details": "3 products saved"}, {"id": 3, "run_at": "2026-08-21T19:43:39.850783", "status": "success", "details": "3 products saved"}, {"id": 2, "run_at": "2026-08-21T19:42:02.416016", "status": "success", "details": "3 products saved"}, {"id": 1, "run_at": "2026-08-19T13:15:41.764651", "status": "success", "details": "4 products saved"}];
-const heroName = "Asus TUF A15 AMD Ryzen 7 170 Gaming Laptop (16GB, 512GB SSD, Windows 11 Home, 4GB Graphics, 15.6 inch 144 Hz Full HD IPS Display, NVIDIA GeForce RTX 3050, MS Office Home 2024, Graphite Black, 2.30 KG)";
-let chart = null;
+  <!-- Mobile-only compact header + page selector -->
+  <div class="mobile-nav-select mb-lg">
+    <div class="flex items-center gap-xs mb-md">
+      <span class="material-symbols-outlined text-primary-container">sensors</span>
+      <h1 class="font-headline-md text-headline-md font-bold tracking-tighter text-on-surface">PriceGuard</h1>
+    </div>
+    <select onchange="showPage(this.value, null)" class="w-full bg-surface-container border border-outline-variant text-on-surface font-data-md text-data-md rounded-lg px-3 py-2.5">
+      <option value="overview">Dashboard</option>
+      <option value="history">History</option>
+      <option value="logs">Logs</option>
+      <option value="snapshots">Snapshots</option>
+    </select>
+  </div>
 
-function formatRupee(v) { return '₹' + Number(v).toLocaleString('en-IN'); }
+  <!-- ===================== PAGE: OVERVIEW ===================== -->
+  <div id="page-overview" class="page active">
 
-function showTab(name, el) {
-  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-  document.getElementById('tab-' + name).classList.add('active');
-  document.querySelectorAll('.nav-link').forEach(n => n.classList.remove('active'));
-  el.classList.add('active');
-  if (name === 'history') renderChart();
-}
-
-function buildSvgPath(values) {
-  if (values.length === 0) return { line: '', fill: '' };
-  if (values.length === 1) values = [values[0], values[0]];
-  const min = Math.min(...values);
-  const max = Math.max(...values);
-  const range = (max - min) || 1;
-  const n = values.length;
-  const pts = values.map((v, i) => {
-    const x = (i / (n - 1)) * 100;
-    const y = 90 - ((v - min) / range) * 80;
-    return [x, y];
-  });
-  let line = `M${pts[0][0]},${pts[0][1]}`;
-  for (let i = 1; i < pts.length; i++) {
-    const [px, py] = pts[i - 1];
-    const [cx, cy] = pts[i];
-    const mx = (px + cx) / 2;
-    line += ` Q${mx},${py} ${cx},${cy}`;
-  }
-  const fill = line + ` L100,100 L0,100 Z`;
-  return { line, fill, pts };
-}
-
-function renderHero() {
-  const card = document.getElementById('heroCard');
-  if (!heroName || !productsData[heroName]) {
-    card.innerHTML = '<div class="text-on-surface-variant font-label-xs text-center py-10">No data yet. Run pipeline.py to collect your first scrape.</div>';
-    return;
-  }
-
-  const rows = productsData[heroName];
-  const latest = rows[rows.length - 1];
-  const prev = rows.length > 1 ? rows[rows.length - 2] : null;
-  const diff = prev ? latest.price_value - prev.price_value : 0;
-  const trendIcon = diff < 0 ? 'trending_down' : (diff > 0 ? 'trending_up' : 'trending_flat');
-  const trendColor = diff < 0 ? 'text-secondary' : (diff > 0 ? 'text-error' : 'text-on-surface-variant');
-  const trendText = diff === 0 ? '—' : formatRupee(Math.abs(diff));
-
-  const values = rows.map(r => r.price_value);
-  const { line, fill, pts } = buildSvgPath(values);
-
-  const labels = ['Mon','Tue','Wed','Thu','Now'];
-  const shortLabels = rows.length <= 5
-    ? rows.map((r, i) => i === rows.length - 1 ? 'Now' : labels[i % labels.length])
-    : rows.map((r, i) => i === rows.length - 1 ? 'Now' : '');
-
-  const dots = (pts || []).slice(0, -1).map(([x, y]) =>
-    `<circle cx="${x}" cy="${y}" fill="#10141a" r="2.5" stroke="#00f0ff" stroke-width="1.5"></circle>`
-  ).join('');
-  const lastPt = pts ? pts[pts.length - 1] : [100, 20];
-
-  card.innerHTML = `
-    <div class="flex justify-between items-start mb-sm">
+    <header class="flex justify-between items-end mb-xl border-b border-outline-variant pb-md flex-wrap gap-md">
       <div>
-        <h2 class="font-headline-sm text-[20px] font-semibold text-on-surface tracking-tight">${heroName.length > 28 ? heroName.slice(0,28) + '…' : heroName}</h2>
-        <div class="flex items-center gap-2 mt-1">
-          <span class="inline-block w-1.5 h-1.5 rounded-full bg-secondary animate-pulse shadow-[0_0_8px_rgba(188,255,95,0.6)]"></span>
-          <span class="font-label-xs text-on-surface-variant uppercase tracking-wider">Live Scraping • Croma</span>
+        <h2 class="font-display-lg text-display-lg text-on-surface mb-1">Overview</h2>
+        <div class="flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-secondary-container"></span>
+          <span class="font-label-xs text-label-xs text-on-surface-variant uppercase tracking-wider">System Online — Last sync 2026-08-23 09:57</span>
         </div>
       </div>
-      <div class="bg-surface-container/50 border border-white/5 rounded-full px-2.5 py-1 flex items-center gap-1 shadow-inner">
-        <span class="material-symbols-outlined text-[14px] ${trendColor}">${trendIcon}</span>
-        <span class="font-data-md text-[13px] ${trendColor} font-medium">${trendText}</span>
+      <div class="flex items-center gap-md">
+        <div class="relative">
+          <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline">search</span>
+          <input id="searchBox" oninput="filterSnapshots()" class="bg-surface-container border border-outline-variant text-on-surface font-body-md text-body-md rounded-lg pl-10 pr-4 py-2 focus:outline-none focus:border-primary-container focus:ring-1 focus:ring-primary-container transition-all w-64" placeholder="Search targets..." type="text"/>
+        </div>
+        <button onclick="location.reload()" class="p-2 rounded-lg bg-surface-container hover:bg-surface-variant text-on-surface transition-colors border border-outline-variant flex items-center justify-center">
+          <span class="material-symbols-outlined">settings</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Metrics Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-gutter mb-xl">
+      <div class="clean-card p-md flex flex-col justify-between min-h-[128px]">
+        <div class="flex justify-between items-start">
+          <p class="font-label-xs text-label-xs text-on-surface-variant tracking-wider uppercase">Products Tracked</p>
+          <span class="material-symbols-outlined text-outline">inventory_2</span>
+        </div>
+        <div>
+          <span class="font-data-lg text-display-lg text-on-surface block mb-1">3</span>
+          <span class="font-label-xs text-label-xs text-secondary-container flex items-center gap-1"><span class="material-symbols-outlined text-[12px]">trending_up</span> tracked</span>
+        </div>
+      </div>
+      <div class="clean-card p-md flex flex-col justify-between min-h-[128px]">
+        <div class="flex justify-between items-start">
+          <p class="font-label-xs text-label-xs text-on-surface-variant tracking-wider uppercase">Total Runs</p>
+          <span class="material-symbols-outlined text-outline">speed</span>
+        </div>
+        <div>
+          <span class="font-data-lg text-display-lg text-on-surface block mb-1">7</span>
+          <span class="font-label-xs text-label-xs text-on-surface-variant">Scrape sessions</span>
+        </div>
+      </div>
+      <div class="clean-card p-md flex flex-col justify-between min-h-[128px]">
+        <div class="flex justify-between items-start">
+          <p class="font-label-xs text-label-xs text-on-surface-variant tracking-wider uppercase">Successful</p>
+          <span class="material-symbols-outlined text-outline">check_circle</span>
+        </div>
+        <div>
+          <span class="font-data-lg text-display-lg text-on-surface block mb-1">100.0%</span>
+        </div>
+      </div>
+      <div class="clean-card p-md flex flex-col justify-between min-h-[128px]">
+        <div class="flex justify-between items-start">
+          <p class="font-label-xs text-label-xs text-on-surface-variant tracking-wider uppercase">Failed</p>
+          <span class="material-symbols-outlined text-outline">warning</span>
+        </div>
+        <div>
+          <span class="font-data-lg text-display-lg text-error block mb-1">0.0%</span>
+          <span class="font-label-xs text-label-xs text-on-surface-variant">0 error(s)</span>
+        </div>
       </div>
     </div>
-    <div class="mb-lg">
-      <div class="font-display-lg text-[36px] font-bold text-primary text-glow tracking-tighter leading-none">${formatRupee(latest.price_value)}</div>
-      <div class="font-data-md text-[13px] text-on-surface-variant mt-2 leading-snug">${latest.discount || 'No discount data'}</div>
-    </div>
-    <div class="h-40 w-full relative flex items-end justify-between px-1">
-      <div class="absolute inset-0 flex flex-col justify-between pointer-events-none">
-        <div class="border-b border-white/[0.03] w-full h-[1px]"></div>
-        <div class="border-b border-white/[0.03] w-full h-[1px]"></div>
-        <div class="border-b border-white/[0.03] w-full h-[1px]"></div>
-        <div class="border-b border-white/[0.03] w-full h-[1px]"></div>
-        <div class="border-b border-white/[0.03] w-full h-[1px]"></div>
+
+    <!-- Main Focus: Live Tracking Card -->
+    <div class="clean-card p-lg flex flex-col xl:flex-row gap-xl">
+      <div class="xl:w-1/3 flex flex-col justify-between">
+        <div>
+          <div class="flex justify-between items-center mb-md">
+            <span class="px-2 py-1 bg-surface-container-high text-on-surface-variant font-label-xs text-label-xs rounded border border-outline-variant uppercase tracking-widest">LIVE TRACKING</span>
+            <span class="font-label-xs text-label-xs text-on-surface-variant">CROMA</span>
+          </div>
+          <h3 class="font-headline-md text-headline-md text-on-surface mb-xs">Asus TUF A15 AMD Ryzen 7 170 Gaming Lapt…</h3>
+          <p class="font-body-md text-body-md text-on-surface-variant mb-lg">Not Available for your pincode</p>
+          <div class="p-md bg-surface-container-low rounded-lg border border-outline-variant mb-lg">
+            <div class="flex items-baseline gap-sm mb-1 flex-wrap">
+              <span class="font-data-lg text-display-lg text-on-surface">₹77,990</span>
+              <span class="font-data-md text-data-md text-secondary-container flex items-center">
+                <span class="material-symbols-outlined text-[16px]">remove</span>
+                —
+              </span>
+            </div>
+            <p class="font-label-xs text-label-xs text-on-surface-variant">Save ₹54,000 (40.91% off)</p>
+          </div>
+        </div>
+        <div class="flex gap-sm mt-auto">
+          <a href="https://www.croma.com/asus-tuf-a15-amd-ryzen-7-170-gaming-laptop-16gb-512gb-ssd-windows-11-home-4gb-graphics-15-6-inch-144-hz-full-hd-ips-display-nvidia-geforce-rtx-3050-ms-office-home-2024-graphite-black-2-30-kg-/p/322265" target="_blank" class="flex-1 py-2 bg-primary-container text-on-primary-container font-data-md text-data-md rounded-lg hover:bg-primary transition-colors flex justify-center items-center gap-xs">
+            <span class="material-symbols-outlined text-[18px]">shopping_cart</span>
+            VIEW ON CROMA
+          </a>
+          <button onclick="showPage('history', document.querySelector('[onclick*=history]'))" class="px-4 py-2 bg-surface-container border border-outline-variant text-on-surface font-data-md text-data-md rounded-lg hover:bg-surface-variant transition-colors flex justify-center items-center">
+            <span class="material-symbols-outlined text-[18px]">history</span>
+          </button>
+        </div>
       </div>
-      <svg class="absolute inset-0 h-full w-full pointer-events-none" preserveAspectRatio="none" viewBox="0 0 100 100">
+
+      <div class="xl:w-2/3 bg-surface-container-low rounded-lg border border-outline-variant relative overflow-hidden h-[300px] xl:h-auto flex flex-col p-md">
+        <div class="flex justify-between items-center mb-md z-10 border-b border-outline-variant pb-sm">
+          <span class="font-label-xs text-label-xs text-on-surface-variant uppercase tracking-wider">Price History — Asus TUF A15 AMD Ryzen 7 170 Gaming Lapt…</span>
+          <div class="flex gap-2">
+            <button class="px-2 py-1 text-label-xs font-data-md bg-surface-container-high text-on-surface rounded border border-outline-variant">ALL</button>
+          </div>
+        </div>
+        <div class="flex-1 relative w-full h-full">
+          <div class="absolute inset-0 flex flex-col justify-between opacity-20 z-0 py-4">
+            <div class="w-full border-t border-outline-variant"></div>
+            <div class="w-full border-t border-outline-variant"></div>
+            <div class="w-full border-t border-outline-variant"></div>
+            <div class="w-full border-t border-outline-variant"></div>
+          </div>
+          <div class="absolute left-0 top-0 bottom-0 flex flex-col justify-between py-2 z-10 pointer-events-none">
+            <span class="font-label-xs text-label-xs text-on-surface-variant">₹77,991</span>
+            <span class="font-label-xs text-label-xs text-on-surface-variant">₹77,990</span>
+            <span class="font-label-xs text-label-xs text-on-surface-variant">₹77,990</span>
+            <span class="font-label-xs text-label-xs text-on-surface-variant">₹77,989</span>
+          </div>
+          <div class="absolute bottom-0 left-14 right-0 flex justify-between z-10 pointer-events-none px-4">
+            <span class="font-label-xs text-label-xs text-on-surface-variant">08-19</span><span class="font-label-xs text-label-xs text-on-surface-variant">08-21</span><span class="font-label-xs text-label-xs text-on-surface-variant">08-21</span><span class="font-label-xs text-label-xs text-on-surface-variant">08-21</span><span class="font-label-xs text-label-xs text-on-surface-variant">08-22</span><span class="font-label-xs text-label-xs text-on-surface-variant">08-22</span><span class="font-label-xs text-label-xs text-on-surface">Now</span>
+          </div>
+          <svg class="absolute inset-0 w-full h-full z-10 pl-14 pb-6 pt-2" preserveAspectRatio="none" viewBox="0 0 100 100">
+            <defs>
+              <linearGradient id="chartGradient" x1="0" x2="0" y1="0" y2="1">
+                <stop offset="0%" stop-color="#00f0ff" stop-opacity="0.15"></stop>
+                <stop offset="100%" stop-color="#00f0ff" stop-opacity="0"></stop>
+              </linearGradient>
+            </defs>
+            <polygon fill="url(#chartGradient)" points="0.0,50.0 14.3,50.0 14.3,50.0 28.6,50.0 28.6,50.0 42.9,50.0 42.9,50.0 57.1,50.0 57.1,50.0 71.4,50.0 71.4,50.0 85.7,50.0 85.7,50.0 100.0,50.0 100,100 0,100"></polygon>
+            <polyline fill="none" points="0.0,50.0 14.3,50.0 14.3,50.0 28.6,50.0 28.6,50.0 42.9,50.0 42.9,50.0 57.1,50.0 57.1,50.0 71.4,50.0 71.4,50.0 85.7,50.0 85.7,50.0 100.0,50.0" stroke="#00dbe9" stroke-width="1.5" vector-effect="non-scaling-stroke"></polyline>
+            <circle cx="100.0" cy="50.0" fill="#00f0ff" r="2.5"></circle>
+          </svg>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== PAGE: HISTORY ===================== -->
+  <div id="page-history" class="page">
+    <header class="mb-xl border-b border-outline-variant pb-md">
+      <h2 class="font-display-lg text-display-lg text-on-surface mb-1">Price History</h2>
+      <p class="font-label-xs text-label-xs text-on-surface-variant uppercase tracking-wider">Full history per product</p>
+    </header>
+    <select id="historySelect" onchange="renderHistoryChart()" class="w-full md:max-w-sm bg-surface-container border border-outline-variant text-on-surface font-data-md text-data-md rounded-lg px-3 py-2.5 mb-lg"></select>
+    <div class="clean-card p-lg h-[400px] relative">
+      <svg id="historySvg" class="w-full h-full" preserveAspectRatio="none" viewBox="0 0 100 100">
         <defs>
-          <linearGradient id="chartGradient" x1="0" x2="0" y1="0" y2="1">
+          <linearGradient id="histGradient" x1="0" x2="0" y1="0" y2="1">
             <stop offset="0%" stop-color="#00f0ff" stop-opacity="0.15"></stop>
             <stop offset="100%" stop-color="#00f0ff" stop-opacity="0"></stop>
           </linearGradient>
         </defs>
-        <path d="${fill}" fill="url(#chartGradient)"></path>
-        <path d="${line}" fill="none" stroke="#00f0ff" stroke-width="1.5" vector-effect="non-scaling-stroke"></path>
-        ${dots}
-        <circle class="animate-pulse" cx="${lastPt[0]}" cy="${lastPt[1]}" fill="#00f0ff" r="3.5"></circle>
+        <polygon id="histPolygon" fill="url(#histGradient)" points=""></polygon>
+        <polyline id="histPolyline" fill="none" points="" stroke="#00dbe9" stroke-width="1.5" vector-effect="non-scaling-stroke"></polyline>
       </svg>
-      <div class="absolute -bottom-6 w-full flex justify-between font-label-xs text-on-surface-variant opacity-60">
-        ${shortLabels.map(l => `<span class="${l === 'Now' ? 'text-primary opacity-100 font-medium' : ''}">${l}</span>`).join('')}
-      </div>
     </div>
-  `;
+  </div>
+
+  <!-- ===================== PAGE: LOGS ===================== -->
+  <div id="page-logs" class="page">
+    <header class="mb-xl border-b border-outline-variant pb-md">
+      <h2 class="font-display-lg text-display-lg text-on-surface mb-1">Scraper Health Log</h2>
+      <p class="font-label-xs text-label-xs text-on-surface-variant uppercase tracking-wider">Every run — success, failure, or self-healed recovery</p>
+    </header>
+    <div class="clean-card overflow-hidden" id="healthLog"></div>
+  </div>
+
+  <!-- ===================== PAGE: SNAPSHOTS ===================== -->
+  <div id="page-snapshots" class="page">
+    <header class="mb-xl border-b border-outline-variant pb-md">
+      <h2 class="font-display-lg text-display-lg text-on-surface mb-1">Current Snapshot</h2>
+      <p class="font-label-xs text-label-xs text-on-surface-variant uppercase tracking-wider">Latest price per tracked product</p>
+    </header>
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-gutter" id="snapshotGrid"></div>
+  </div>
+
+</main>
+
+<script>
+const productsData = {"Asus TUF A15 AMD Ryzen 7 170 Gaming Laptop (16GB, 512GB SSD, Windows 11 Home, 4GB Graphics, 15.6 inch 144 Hz Full HD IPS Display, NVIDIA GeForce RTX 3050, MS Office Home 2024, Graphite Black, 2.30 KG)": [{"id": 1, "product_name": "Asus Tuf A15 Amd Ryzen 7 170 Gaming Laptop 16Gb 512Gb Ssd Windows 11 Home 4Gb Graphics 15 6 Inch 144 Hz Full Hd Ips Display Nvidia Geforce Rtx 3050 Ms Office Home 2024 Graphite Black 2 30 Kg ", "price_value": 77990.0, "currency": "INR", "discount": "Save ₹54,000 (40.91% off)", "stock_availability": "Not Available for your pincode", "product_url": "https://www.croma.com/asus-tuf-a15-amd-ryzen-7-170-gaming-laptop-16gb-512gb-ssd-windows-11-home-4gb-graphics-15-6-inch-144-hz-full-hd-ips-display-nvidia-geforce-rtx-3050-ms-office-home-2024-graphite-black-2-30-kg-/p/322265", "scraped_at": "2026-08-19T13:15:41.744072"}, {"id": 4, "product_name": "Asus TUF A15 AMD Ryzen 7 170 Gaming Laptop (16GB, 512GB SSD, Windows 11 Home, 4GB Graphics, 15.6 inch 144 Hz Full HD IPS Display, NVIDIA GeForce RTX 3050, MS Office Home 2024, Graphite Black, 2.30 KG)", "price_value": 77990.0, "currency": "INR", "discount": "Save ₹54,000 (40.91% off)", "stock_availability": "Not Available for your pincode", "product_url": "https://www.croma.com/asus-tuf-a15-amd-ryzen-7-170-gaming-laptop-16gb-512gb-ssd-windows-11-home-4gb-graphics-15-6-inch-144-hz-full-hd-ips-display-nvidia-geforce-rtx-3050-ms-office-home-2024-graphite-black-2-30-kg-/p/322265", "scraped_at": "2026-08-21T19:42:02.395602"}, {"id": 9, "product_name": "Asus TUF A15 AMD Ryzen 7 170 Gaming Laptop (16GB, 512GB SSD, Windows 11 Home, 4GB Graphics, 15.6 inch 144 Hz Full HD IPS Display, NVIDIA GeForce RTX 3050, MS Office Home 2024, Graphite Black, 2.30 KG)", "price_value": 77990.0, "currency": "INR", "discount": "Save ₹54,000 (40.91% off)", "stock_availability": "Not Available for your pincode", "product_url": "https://www.croma.com/asus-tuf-a15-amd-ryzen-7-170-gaming-laptop-16gb-512gb-ssd-windows-11-home-4gb-graphics-15-6-inch-144-hz-full-hd-ips-display-nvidia-geforce-rtx-3050-ms-office-home-2024-graphite-black-2-30-kg-/p/322265", "scraped_at": "2026-08-21T19:43:39.834918"}, {"id": 10, "product_name": "Asus Tuf A15 Amd Ryzen 7 170 Gaming Laptop 16Gb 512Gb Ssd Windows 11 Home 4Gb Graphics 15 6 Inch 144 Hz Full Hd Ips Display Nvidia Geforce Rtx 3050 Ms Office Home 2024 Graphite Black 2 30 Kg ", "price_value": 77990.0, "currency": "INR", "discount": "Save ₹54,000 (40.91% off)", "stock_availability": "Not Available for your pincode", "product_url": "https://www.croma.com/asus-tuf-a15-amd-ryzen-7-170-gaming-laptop-16gb-512gb-ssd-windows-11-home-4gb-graphics-15-6-inch-144-hz-full-hd-ips-display-nvidia-geforce-rtx-3050-ms-office-home-2024-graphite-black-2-30-kg-/p/322265", "scraped_at": "2026-08-21T19:44:38.081774"}, {"id": 15, "product_name": "Asus Tuf A15 Amd Ryzen 7 170 Gaming Laptop 16Gb 512Gb Ssd Windows 11 Home 4Gb Graphics 15 6 Inch 144 Hz Full Hd Ips Display Nvidia Geforce Rtx 3050 Ms Office Home 2024 Graphite Black 2 30 Kg ", "price_value": 77990.0, "currency": "INR", "discount": "Save ₹54,000 (40.91% off)", "stock_availability": "Not Available for your pincode", "product_url": "https://www.croma.com/asus-tuf-a15-amd-ryzen-7-170-gaming-laptop-16gb-512gb-ssd-windows-11-home-4gb-graphics-15-6-inch-144-hz-full-hd-ips-display-nvidia-geforce-rtx-3050-ms-office-home-2024-graphite-black-2-30-kg-/p/322265", "scraped_at": "2026-08-22T11:42:13.815839"}, {"id": 18, "product_name": "Asus Tuf A15 Amd Ryzen 7 170 Gaming Laptop 16Gb 512Gb Ssd Windows 11 Home 4Gb Graphics 15 6 Inch 144 Hz Full Hd Ips Display Nvidia Geforce Rtx 3050 Ms Office Home 2024 Graphite Black 2 30 Kg ", "price_value": 77990.0, "currency": "INR", "discount": "Save ₹54,000 (40.91% off)", "stock_availability": "Not Available for your pincode", "product_url": "https://www.croma.com/asus-tuf-a15-amd-ryzen-7-170-gaming-laptop-16gb-512gb-ssd-windows-11-home-4gb-graphics-15-6-inch-144-hz-full-hd-ips-display-nvidia-geforce-rtx-3050-ms-office-home-2024-graphite-black-2-30-kg-/p/322265", "scraped_at": "2026-08-22T11:47:30.746125"}, {"id": 21, "product_name": "Asus Tuf A15 Amd Ryzen 7 170 Gaming Laptop 16Gb 512Gb Ssd Windows 11 Home 4Gb Graphics 15 6 Inch 144 Hz Full Hd Ips Display Nvidia Geforce Rtx 3050 Ms Office Home 2024 Graphite Black 2 30 Kg ", "price_value": 77990.0, "currency": "INR", "discount": "Save ₹54,000 (40.91% off)", "stock_availability": "Not Available for your pincode", "product_url": "https://www.croma.com/asus-tuf-a15-amd-ryzen-7-170-gaming-laptop-16gb-512gb-ssd-windows-11-home-4gb-graphics-15-6-inch-144-hz-full-hd-ips-display-nvidia-geforce-rtx-3050-ms-office-home-2024-graphite-black-2-30-kg-/p/322265", "scraped_at": "2026-08-23T09:57:07.744557"}], "ASUS Vivobook 16 Snapdragon X X1 26 100 Thin & Light Laptop (16GB, 512GB SSD, Windows 11 Home, 16 inch WUXGA Display, MS Office Home 2024, Cool Silver, 1.88 KG)": [{"id": 2, "product_name": "ASUS Vivobook 16 Snapdragon X X1 26 100 Thin & Light Laptop (16GB, 512GB SSD, Windows 11 Home, 16 inch WUXGA Display, MS Office Home 2024, Cool Silver, 1.88 KG)", "price_value": 64990.0, "currency": "INR", "discount": "Save ₹20,000 (23.53% off)", "stock_availability": "Not Available for your pincode", "product_url": "https://www.croma.com/asus-vivobook-16-snapdragon-x-x1-26-100-thin-light-laptop-16gb-512gb-ssd-windows-11-home-16-inch-wuxga-display-ms-office-home-2024-cool-silver-1-88-kg-/p/314355", "scraped_at": "2026-08-19T13:15:41.744072"}, {"id": 5, "product_name": "Asus Vivobook 16 Snapdragon X X1 26 100 Thin Light Laptop 16Gb 512Gb Ssd Windows 11 Home 16 Inch Wuxga Display Ms Office Home 2024 Cool Silver 1 88 Kg ", "price_value": 64990.0, "currency": "INR", "discount": "Save ₹20,000 (23.53% off)", "stock_availability": "Not Available for your pincode", "product_url": "https://www.croma.com/asus-vivobook-16-snapdragon-x-x1-26-100-thin-light-laptop-16gb-512gb-ssd-windows-11-home-16-inch-wuxga-display-ms-office-home-2024-cool-silver-1-88-kg-/p/314355", "scraped_at": "2026-08-21T19:42:02.395602"}, {"id": 8, "product_name": "Asus Vivobook 16 Snapdragon X X1 26 100 Thin Light Laptop 16Gb 512Gb Ssd Windows 11 Home 16 Inch Wuxga Display Ms Office Home 2024 Cool Silver 1 88 Kg ", "price_value": 64990.0, "currency": "INR", "discount": "Save ₹20,000 (23.53% off)", "stock_availability": "Not Available for your pincode", "product_url": "https://www.croma.com/asus-vivobook-16-snapdragon-x-x1-26-100-thin-light-laptop-16gb-512gb-ssd-windows-11-home-16-inch-wuxga-display-ms-office-home-2024-cool-silver-1-88-kg-/p/314355", "scraped_at": "2026-08-21T19:43:39.834918"}, {"id": 11, "product_name": "ASUS Vivobook 16 Snapdragon X X1 26 100 Thin & Light Laptop (16GB, 512GB SSD, Windows 11 Home, 16 inch WUXGA Display, MS Office Home 2024, Cool Silver, 1.88 KG)", "price_value": 64990.0, "currency": "INR", "discount": "Save ₹20,000 (23.53% off)", "stock_availability": "Not Available for your pincode", "product_url": "https://www.croma.com/asus-vivobook-16-snapdragon-x-x1-26-100-thin-light-laptop-16gb-512gb-ssd-windows-11-home-16-inch-wuxga-display-ms-office-home-2024-cool-silver-1-88-kg-/p/314355", "scraped_at": "2026-08-21T19:44:38.081774"}, {"id": 13, "product_name": "ASUS Vivobook 16 Snapdragon X X1 26 100 Thin & Light Laptop (16GB, 512GB SSD, Windows 11 Home, 16 inch WUXGA Display, MS Office Home 2024, Cool Silver, 1.88 KG)", "price_value": 64990.0, "currency": "INR", "discount": "Save ₹20,000 (23.53% off)", "stock_availability": "Not Available for your pincode", "product_url": "https://www.croma.com/asus-vivobook-16-snapdragon-x-x1-26-100-thin-light-laptop-16gb-512gb-ssd-windows-11-home-16-inch-wuxga-display-ms-office-home-2024-cool-silver-1-88-kg-/p/314355", "scraped_at": "2026-08-22T11:42:13.815839"}, {"id": 16, "product_name": "Asus Vivobook 16 Snapdragon X X1 26 100 Thin Light Laptop 16Gb 512Gb Ssd Windows 11 Home 16 Inch Wuxga Display Ms Office Home 2024 Cool Silver 1 88 Kg ", "price_value": 64990.0, "currency": "INR", "discount": "Save ₹20,000 (23.53% off)", "stock_availability": "Not Available for your pincode", "product_url": "https://www.croma.com/asus-vivobook-16-snapdragon-x-x1-26-100-thin-light-laptop-16gb-512gb-ssd-windows-11-home-16-inch-wuxga-display-ms-office-home-2024-cool-silver-1-88-kg-/p/314355", "scraped_at": "2026-08-22T11:47:30.746125"}, {"id": 20, "product_name": "Asus Vivobook 16 Snapdragon X X1 26 100 Thin Light Laptop 16Gb 512Gb Ssd Windows 11 Home 16 Inch Wuxga Display Ms Office Home 2024 Cool Silver 1 88 Kg ", "price_value": 64990.0, "currency": "INR", "discount": "Save ₹20,000 (23.53% off)", "stock_availability": "Not Available for your pincode", "product_url": "https://www.croma.com/asus-vivobook-16-snapdragon-x-x1-26-100-thin-light-laptop-16gb-512gb-ssd-windows-11-home-16-inch-wuxga-display-ms-office-home-2024-cool-silver-1-88-kg-/p/314355", "scraped_at": "2026-08-23T09:57:07.744557"}], "Lenovo LOQ 15IRX9 Intel Core i5 13th Generation Gaming Laptop (16GB, 512GB SSD, Windows 11 Home, 6GB Graphics, 15.6 Inch 144 Hz Full HD IPS Display , NVIDIA GeForce RTX 3050, MS Office Home 2024, Luna Grey, 2.38 KG": [{"id": 3, "product_name": "Lenovo LOQ 15IRX9 Intel Core i5 13th Generation Gaming Laptop (16GB, 512GB SSD, Windows 11 Home, 6GB Graphics, 15.6 Inch 144 Hz Full HD IPS Display , NVIDIA GeForce RTX 3050, MS Office Home 2024, Luna Grey, 2.38 KG", "price_value": 102990.0, "currency": "INR", "discount": "Save ₹14,500 (12.34% off)", "stock_availability": "Not Available for your pincode", "product_url": "https://www.croma.com/lenovo-loq-15irx9-intel-core-i5-13th-generation-gaming-laptop-16gb-512gb-ssd-windows-11-home-6gb-graphics-15-6-inch-144-hz-full-hd-ips-display-nvidia-geforce-rtx-3050-ms-office-home-2024-luna-grey-2-38-kg/p/316655", "scraped_at": "2026-08-19T13:15:41.744072"}, {"id": 6, "product_name": "Lenovo LOQ 15IRX9 Intel Core i5 13th Generation Gaming Laptop (16GB, 512GB SSD, Windows 11 Home, 6GB Graphics, 15.6 Inch 144 Hz Full HD IPS Display , NVIDIA GeForce RTX 3050, MS Office Home 2024, Luna Grey, 2.38 KG", "price_value": 102990.0, "currency": "INR", "discount": "Save ₹14,500 (12.34% off)", "stock_availability": "Not Available for your pincode", "product_url": "https://www.croma.com/lenovo-loq-15irx9-intel-core-i5-13th-generation-gaming-laptop-16gb-512gb-ssd-windows-11-home-6gb-graphics-15-6-inch-144-hz-full-hd-ips-display-nvidia-geforce-rtx-3050-ms-office-home-2024-luna-grey-2-38-kg/p/316655", "scraped_at": "2026-08-21T19:42:02.395602"}, {"id": 7, "product_name": "Lenovo Loq 15Irx9 Intel Core I5 13Th Generation Gaming Laptop 16Gb 512Gb Ssd Windows 11 Home 6Gb Graphics 15 6 Inch 144 Hz Full Hd Ips Display Nvidia Geforce Rtx 3050 Ms Office Home 2024 Luna Grey 2 38 Kg", "price_value": 102990.0, "currency": "INR", "discount": "Save ₹14,500 (12.34% off)", "stock_availability": "Not Available for your pincode", "product_url": "https://www.croma.com/lenovo-loq-15irx9-intel-core-i5-13th-generation-gaming-laptop-16gb-512gb-ssd-windows-11-home-6gb-graphics-15-6-inch-144-hz-full-hd-ips-display-nvidia-geforce-rtx-3050-ms-office-home-2024-luna-grey-2-38-kg/p/316655", "scraped_at": "2026-08-21T19:43:39.834918"}, {"id": 12, "product_name": "Lenovo Loq 15Irx9 Intel Core I5 13Th Generation Gaming Laptop 16Gb 512Gb Ssd Windows 11 Home 6Gb Graphics 15 6 Inch 144 Hz Full Hd Ips Display Nvidia Geforce Rtx 3050 Ms Office Home 2024 Luna Grey 2 38 Kg", "price_value": 102990.0, "currency": "INR", "discount": "Save ₹14,500 (12.34% off)", "stock_availability": "Not Available for your pincode", "product_url": "https://www.croma.com/lenovo-loq-15irx9-intel-core-i5-13th-generation-gaming-laptop-16gb-512gb-ssd-windows-11-home-6gb-graphics-15-6-inch-144-hz-full-hd-ips-display-nvidia-geforce-rtx-3050-ms-office-home-2024-luna-grey-2-38-kg/p/316655", "scraped_at": "2026-08-21T19:44:38.081774"}, {"id": 14, "product_name": "Lenovo LOQ 15IRX9 Intel Core i5 13th Generation Gaming Laptop (16GB, 512GB SSD, Windows 11 Home, 6GB Graphics, 15.6 Inch 144 Hz Full HD IPS Display , NVIDIA GeForce RTX 3050, MS Office Home 2024, Luna Grey, 2.38 KG", "price_value": 102990.0, "currency": "INR", "discount": "Save ₹14,500 (12.34% off)", "stock_availability": "Not Available for your pincode", "product_url": "https://www.croma.com/lenovo-loq-15irx9-intel-core-i5-13th-generation-gaming-laptop-16gb-512gb-ssd-windows-11-home-6gb-graphics-15-6-inch-144-hz-full-hd-ips-display-nvidia-geforce-rtx-3050-ms-office-home-2024-luna-grey-2-38-kg/p/316655", "scraped_at": "2026-08-22T11:42:13.815839"}, {"id": 17, "product_name": "Lenovo Loq 15Irx9 Intel Core I5 13Th Generation Gaming Laptop 16Gb 512Gb Ssd Windows 11 Home 6Gb Graphics 15 6 Inch 144 Hz Full Hd Ips Display Nvidia Geforce Rtx 3050 Ms Office Home 2024 Luna Grey 2 38 Kg", "price_value": 102990.0, "currency": "INR", "discount": "Save ₹14,500 (12.34% off)", "stock_availability": "Not Available for your pincode", "product_url": "https://www.croma.com/lenovo-loq-15irx9-intel-core-i5-13th-generation-gaming-laptop-16gb-512gb-ssd-windows-11-home-6gb-graphics-15-6-inch-144-hz-full-hd-ips-display-nvidia-geforce-rtx-3050-ms-office-home-2024-luna-grey-2-38-kg/p/316655", "scraped_at": "2026-08-22T11:47:30.746125"}, {"id": 19, "product_name": "Lenovo LOQ 15IRX9 Intel Core i5 13th Generation Gaming Laptop (16GB, 512GB SSD, Windows 11 Home, 6GB Graphics, 15.6 Inch 144 Hz Full HD IPS Display , NVIDIA GeForce RTX 3050, MS Office Home 2024, Luna Grey, 2.38 KG", "price_value": 102990.0, "currency": "INR", "discount": "Save ₹14,500 (12.34% off)", "stock_availability": "Not Available for your pincode", "product_url": "https://www.croma.com/lenovo-loq-15irx9-intel-core-i5-13th-generation-gaming-laptop-16gb-512gb-ssd-windows-11-home-6gb-graphics-15-6-inch-144-hz-full-hd-ips-display-nvidia-geforce-rtx-3050-ms-office-home-2024-luna-grey-2-38-kg/p/316655", "scraped_at": "2026-08-23T09:57:07.744557"}]};
+const healthData = [{"id": 7, "run_at": "2026-08-23T09:57:07.755222", "status": "success", "details": "3 products saved"}, {"id": 6, "run_at": "2026-08-22T11:47:30.760524", "status": "success", "details": "3 products saved"}, {"id": 5, "run_at": "2026-08-22T11:42:13.838868", "status": "success", "details": "3 products saved"}, {"id": 4, "run_at": "2026-08-21T19:44:38.098419", "status": "success", "details": "3 products saved"}, {"id": 3, "run_at": "2026-08-21T19:43:39.850783", "status": "success", "details": "3 products saved"}, {"id": 2, "run_at": "2026-08-21T19:42:02.416016", "status": "success", "details": "3 products saved"}, {"id": 1, "run_at": "2026-08-19T13:15:41.764651", "status": "success", "details": "4 products saved"}];
+
+function formatRupee(v) { return '₹' + Number(v).toLocaleString('en-IN'); }
+
+function showPage(name, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  document.querySelectorAll('.nav-link').forEach(n => n.classList.remove('active'));
+  if (el) el.classList.add('active');
+  if (name === 'history') renderHistoryChart();
 }
 
-function populateSelect() {
-  const sel = document.getElementById('productSelect');
+function populateHistorySelect() {
+  const sel = document.getElementById('historySelect');
   Object.keys(productsData).forEach(name => {
     const opt = document.createElement('option');
     opt.value = name;
-    opt.textContent = name.length > 60 ? name.slice(0, 60) + '…' : name;
+    opt.textContent = name.length > 70 ? name.slice(0, 70) + '…' : name;
     sel.appendChild(opt);
   });
-  if (heroName) sel.value = heroName;
 }
 
-function renderChart() {
-  const sel = document.getElementById('productSelect');
+function renderHistoryChart() {
+  const sel = document.getElementById('historySelect');
   const rows = productsData[sel.value] || [];
-  const labels = rows.map(r => r.scraped_at.slice(0, 16).replace('T', ' '));
-  const data = rows.map(r => r.price_value);
+  if (rows.length === 0) return;
 
-  if (chart) chart.destroy();
-  const ctx = document.getElementById('priceChart').getContext('2d');
-  chart = new Chart(ctx, {
-    type: 'line',
-    data: { labels, datasets: [{
-      label: 'Price', data,
-      borderColor: '#00f0ff',
-      backgroundColor: 'rgba(0,240,255,0.10)',
-      borderWidth: 2, pointBackgroundColor: '#00f0ff',
-      pointBorderColor: '#10141a', pointBorderWidth: 2,
-      pointRadius: 5, pointHoverRadius: 7, tension: 0.35, fill: true
-    }] },
-    options: {
-      responsive: true,
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          backgroundColor: '#1c2026', borderColor: 'rgba(255,255,255,0.1)', borderWidth: 1,
-          titleFont: { family: 'JetBrains Mono', size: 11 }, bodyFont: { family: 'JetBrains Mono', size: 12 },
-          padding: 10, callbacks: { label: (c) => formatRupee(c.parsed.y) }
-        }
-      },
-      scales: {
-        x: { ticks: { color: '#8a9696', font: { family: 'JetBrains Mono', size: 9 } }, grid: { color: 'rgba(255,255,255,0.04)' } },
-        y: { ticks: { color: '#8a9696', font: { family: 'JetBrains Mono', size: 9 }, callback: v => formatRupee(v) }, grid: { color: 'rgba(255,255,255,0.04)' } }
-      }
-    }
+  const values = rows.map(r => r.price_value);
+  const vmin = Math.min(...values);
+  const vmax = Math.max(...values) === vmin ? vmin + 1 : Math.max(...values);
+  const range = vmax - vmin;
+  const n = rows.length;
+  const step = 100 / n;
+
+  let pts = [];
+  values.forEach((v, i) => {
+    const y = 90 - ((v - vmin) / range) * 80;
+    pts.push([i * step, y]);
+    pts.push([(i + 1) * step, y]);
   });
+
+  const polyline = pts.map(p => p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' ');
+  const polygon = polyline + ' 100,100 0,100';
+
+  document.getElementById('histPolyline').setAttribute('points', polyline);
+  document.getElementById('histPolygon').setAttribute('points', polygon);
 }
 
-function renderSnapshot() {
+function renderSnapshots(filter) {
   const grid = document.getElementById('snapshotGrid');
-  const entries = Object.entries(productsData);
+  let entries = Object.entries(productsData);
+  if (filter) {
+    const f = filter.toLowerCase();
+    entries = entries.filter(([name]) => name.toLowerCase().includes(f));
+  }
+
   if (entries.length === 0) {
-    grid.innerHTML = '<div class="text-on-surface-variant font-label-xs text-center py-10">No data yet.</div>';
+    grid.innerHTML = '<div class="font-label-xs text-label-xs text-on-surface-variant text-center py-10 col-span-full">No matching products.</div>';
     return;
   }
+
   grid.innerHTML = entries.map(([name, rows]) => {
     const latest = rows[rows.length - 1];
     const prev = rows.length > 1 ? rows[rows.length - 2] : null;
-    let trendHtml = '<span class="text-on-surface-variant font-label-xs">—</span>';
+    let trendHtml = '<span class="font-label-xs text-label-xs text-on-surface-variant">—</span>';
     if (prev) {
       const diff = latest.price_value - prev.price_value;
-      if (diff > 0) trendHtml = `<span class="text-error font-data-md text-[12px]">▲ ${formatRupee(Math.abs(diff))}</span>`;
-      else if (diff < 0) trendHtml = `<span class="text-secondary font-data-md text-[12px]">▼ ${formatRupee(Math.abs(diff))}</span>`;
+      if (diff > 0) trendHtml = `<span class="font-data-md text-data-md text-error flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">arrow_upward</span>${formatRupee(Math.abs(diff))}</span>`;
+      else if (diff < 0) trendHtml = `<span class="font-data-md text-data-md text-secondary-container flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">arrow_downward</span>${formatRupee(Math.abs(diff))}</span>`;
     }
     return `
-      <div class="product-card glass-panel rounded-2xl p-4">
-        <div class="text-[13px] font-medium text-on-surface leading-snug mb-2">${name}</div>
-        <div class="flex items-baseline justify-between mb-2">
-          <span class="font-data-lg text-[19px] text-primary">${formatRupee(latest.price_value)}</span>
+      <a href="${latest.product_url}" target="_blank" class="product-row clean-card p-md flex flex-col gap-2 block">
+        <div class="font-body-md text-body-md text-on-surface leading-snug">${name}</div>
+        <div class="flex items-baseline justify-between">
+          <span class="font-data-lg text-headline-sm text-primary-container">${formatRupee(latest.price_value)}</span>
           ${trendHtml}
         </div>
         <div class="flex items-center justify-between">
-          <span class="font-label-xs text-on-surface-variant/70">${latest.discount || 'No discount'}</span>
-          <span class="font-label-xs text-on-surface-variant/50 uppercase">${latest.stock_availability || '—'}</span>
+          <span class="font-label-xs text-label-xs text-on-surface-variant">${latest.discount || 'No discount'}</span>
+          <span class="font-label-xs text-label-xs text-outline uppercase">${latest.stock_availability || '—'}</span>
         </div>
-      </div>
+      </a>
     `;
   }).join('');
+}
+
+function filterSnapshots() {
+  const val = document.getElementById('searchBox').value;
+  renderSnapshots(val);
 }
 
 function renderHealth() {
   const log = document.getElementById('healthLog');
   if (healthData.length === 0) {
-    log.innerHTML = '<div class="text-on-surface-variant font-label-xs text-center py-10">No health log entries yet.</div>';
+    log.innerHTML = '<div class="font-label-xs text-label-xs text-on-surface-variant text-center py-10">No health log entries yet.</div>';
     return;
   }
-  const colorFor = (s) => s === 'success' ? 'text-primary' : (s === 'failed' ? 'text-error' : 'text-secondary');
+  const colorFor = (s) => s === 'success' ? 'text-primary-container' : (s === 'failed' ? 'text-error' : 'text-secondary-container');
   log.innerHTML = healthData.map(h => `
-    <div class="log-row flex items-center gap-3 px-4 py-3 font-data-md text-[11px]">
-      <span class="${colorFor(h.status)} font-semibold w-16 flex-shrink-0">${h.status.toUpperCase()}</span>
-      <span class="text-on-surface-variant w-36 flex-shrink-0">${h.run_at.slice(0,19).replace('T',' ')}</span>
-      <span class="text-on-surface-variant/70 flex-1 truncate">${h.details || ''}</span>
+    <div class="log-row flex items-center gap-4 px-md py-3 font-data-md text-data-md">
+      <span class="${colorFor(h.status)} font-bold w-20 flex-shrink-0 text-[12px]">${h.status.toUpperCase()}</span>
+      <span class="text-on-surface-variant w-40 flex-shrink-0 text-[12px]">${h.run_at.slice(0,19).replace('T',' ')}</span>
+      <span class="text-on-surface-variant/80 flex-1 truncate text-[12px]">${h.details || ''}</span>
     </div>
   `).join('');
 }
 
-renderHero();
-populateSelect();
-renderSnapshot();
+populateHistorySelect();
+renderSnapshots();
 renderHealth();
 </script>
 
-</body>
-</html>
+</body></html>
